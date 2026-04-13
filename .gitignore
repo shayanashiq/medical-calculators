@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma
+
+# Uploaded calculator images (keep folder via .gitkeep)
+/public/calculator-images/*
+!/public/calculator-images/.gitkeep

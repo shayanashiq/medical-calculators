@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum FieldType {
+  NUMBER
+  SELECT
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
+  name        String
+  description String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Calculator {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug              String   @unique
+  name              String
+  description       String
+  formulaPlain      String
+  category          String
+  /// Optional card image: HTTPS URL or site path e.g. /calculator-images/abc.jpg
+  imageUrl          String?
+  /// JSON: [{ "label": string, "unit": string, "formula": string, "decimals"?: number }]
+  outputs           Json
+  /// Optional expression that must evaluate to non-zero (same variables as outputs).
+  validationExpr    String?
+  validationMessage String?
+  showOnHome        Boolean  @default(false)
+  fields            CalculatorField[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model CalculatorField {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  calculatorId  String      @db.ObjectId
+  calculator    Calculator  @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+  key           String
+  label         String
+  fieldType     FieldType   @default(NUMBER)
+  min           Float?
+  max           Float?
+  step          Float       @default(1)
+  defaultValue  Float       @default(0)
+  /// JSON: [{ "label": string, "value": number }]
+  selectOptions Json?
+  sortOrder     Int         @default(0)
+
+  @@unique([calculatorId, key])
+}
