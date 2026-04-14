@@ -29,13 +29,7 @@ export default async function CategoriesIndexPage() {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-7xl bg-white px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-5 text-sm">
-        <Link href="/" className="font-semibold text-sky-700 hover:text-sky-800">
-          Home
-        </Link>
-      </div>
-
+    <main className="mx-auto w-full max-w-7xl bg-white px-4 py-6 sm:px-6 lg:px-8">
       <CategoriesIndexSearch rows={rows} />
     </main>
   );

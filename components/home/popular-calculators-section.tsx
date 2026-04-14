@@ -41,13 +41,14 @@ export function PopularCalculatorsSection({ calculators, totalCount }: Props) {
             .
           </p>
         ) : (
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-10 grid justify-items-center gap-5 sm:grid-cols-2 sm:justify-items-stretch lg:grid-cols-3 xl:grid-cols-4">
             {calculators.map((item, idx) => (
-              <CalculatorTileCard
-                key={item.slug}
-                calculator={item}
-                gradientClass={calculatorCardGradients[idx % calculatorCardGradients.length]}
-              />
+              <div key={item.slug} className="w-full max-w-[22rem] sm:max-w-none">
+                <CalculatorTileCard
+                  calculator={item}
+                  gradientClass={calculatorCardGradients[idx % calculatorCardGradients.length]}
+                />
+              </div>
             ))}
           </div>
         )}

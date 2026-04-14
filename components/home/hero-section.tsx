@@ -37,7 +37,7 @@ const trustBadges: { label: string; path: ReactNode }[] = [
 export function HeroSection() {
   return (
     <section
-      className="relative min-h-screen overflow-hidden flex items-center justify-center px-6 py-20"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-20 sm:px-6"
       style={{
         background: "linear-gradient(135deg, #0d9488 0%, #0891b2 50%, #0284c7 100%)",
       }}
@@ -51,8 +51,8 @@ export function HeroSection() {
         style={{ background: "rgba(255,255,255,0.05)" }}
       />
 
-      <div className="relative z-10 text-center max-w-3xl w-full">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-4 animate-[fadeUp_0.6s_ease_both] whitespace-nowrap">
+      <div className="relative z-10 text-center w-full">
+        <h1 className="mb-4 animate-[fadeUp_0.6s_ease_both] text-balance text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
           {SITE_TITLE_DEFAULT}
         </h1>
 

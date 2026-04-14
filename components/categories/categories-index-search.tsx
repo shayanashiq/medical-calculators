@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CategoryCard } from "@/components/cards/category-card";
-import type { CalculatorCategory } from "@/lib/categories";
+import type { CategorCategory } from "@/lib/categories";
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 
 type Row = {
-  category: CalculatorCategory;
-  calculatorCount: number;
+  category: CategorCategory;
+  categorCount: number;
 };
 
 type Props = {
@@ -35,7 +35,7 @@ export function CategoriesIndexSearch({ rows }: Props) {
     /* filter is live; Enter still runs submit for mobile UX */
   };
 
-  const totalTopics = rows.length;
+  const totalCategors = rows.length;
   const query = q.trim();
   const showing = filtered.length;
 
@@ -43,7 +43,7 @@ export function CategoriesIndexSearch({ rows }: Props) {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Categories</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900">Categories</h1>
           <p className="mt-1 text-sm text-slate-500">
             {query ? (
               <>
@@ -51,7 +51,7 @@ export function CategoriesIndexSearch({ rows }: Props) {
               </>
             ) : (
               <>
-                {totalTopics} topic{totalTopics === 1 ? "" : "s"}
+                {totalCategors} categor{totalCategors === 1 ? "y" : "ies"}
               </>
             )}
           </p>
@@ -84,18 +84,12 @@ export function CategoriesIndexSearch({ rows }: Props) {
       ) : null}
 
       <section className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {filtered.map(({ category, calculatorCount }) => (
+        {filtered.map(({ category, categorCount }) => (
           <div key={category.slug} className="flex min-h-[200px]">
-            <CategoryCard category={category} calculatorCount={calculatorCount} />
+            <CategoryCard category={category} categorCount={categorCount} />
           </div>
         ))}
       </section>
-
-      <p className="mt-8 text-sm">
-        <Link href="/" className="font-semibold text-sky-700 hover:text-sky-900">
-          ← Home
-        </Link>
-      </p>
     </div>
   );
 }

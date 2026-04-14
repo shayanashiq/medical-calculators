@@ -100,7 +100,7 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">All calculators</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900">All calculators</h1>
           <p className="mt-1 text-sm text-slate-500">
             {loading ? (
               "Searching…"
@@ -164,12 +164,6 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
       ) : items.length > 0 ? (
         <p className="mt-10 text-center text-sm text-slate-400">You&apos;ve reached the end of the list.</p>
       ) : null}
-
-      <p className="mt-8 text-sm">
-        <Link href="/" className="font-semibold text-sky-700 hover:text-sky-900">
-          ← Home
-        </Link>
-      </p>
     </div>
   );
 }
