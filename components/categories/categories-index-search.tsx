@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CategoryCard } from "@/components/cards/category-card";
-import type { CategorCategory } from "@/lib/categories";
+import type { CalculatorCategory } from "@/lib/categories";
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 
 type Row = {
-  category: CategorCategory;
-  categorCount: number;
+  category: CalculatorCategory;
+  calculatorCount: number;
 };
 
 type Props = {
@@ -35,7 +35,7 @@ export function CategoriesIndexSearch({ rows }: Props) {
     /* filter is live; Enter still runs submit for mobile UX */
   };
 
-  const totalCategors = rows.length;
+  const totalCategories = rows.length;
   const query = q.trim();
   const showing = filtered.length;
 
@@ -51,7 +51,7 @@ export function CategoriesIndexSearch({ rows }: Props) {
               </>
             ) : (
               <>
-                {totalCategors} categor{totalCategors === 1 ? "y" : "ies"}
+                {totalCategories} categor{totalCategories === 1 ? "y" : "ies"}
               </>
             )}
           </p>
@@ -84,9 +84,9 @@ export function CategoriesIndexSearch({ rows }: Props) {
       ) : null}
 
       <section className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {filtered.map(({ category, categorCount }) => (
+        {filtered.map(({ category, calculatorCount }) => (
           <div key={category.slug} className="flex min-h-[200px]">
-            <CategoryCard category={category} categorCount={categorCount} />
+            <CategoryCard category={category} calculatorCount={calculatorCount} />
           </div>
         ))}
       </section>
