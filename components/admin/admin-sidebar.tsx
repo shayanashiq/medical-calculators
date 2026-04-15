@@ -9,6 +9,7 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: "◆" },
   { href: "/admin/calculators", label: "Calculators", icon: "⎔" },
   { href: "/admin/categories", label: "Categories", icon: "▦" },
+  { href: "/admin/unit-presets", label: "Unit presets", icon: "⌖" },
 ] as const;
 
 export function AdminSidebar() {

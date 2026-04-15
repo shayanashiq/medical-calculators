@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { CalculatorAdminForm } from "@/components/admin/calculator-admin-form";
 import { getAllCategories } from "@/lib/categories";
 import { prisma } from "@/lib/prisma";
+import { getAllUnitPresetsForAdmin } from "@/lib/unit-preset-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +14,13 @@ export default async function EditCalculatorPage({ params }: { params: Promise<{
   }
 
   const { id } = await params;
-  const [row, categoryList] = await Promise.all([
+  const [row, categoryList, unitPresets] = await Promise.all([
     prisma.calculator.findUnique({
       where: { id },
       include: { fields: { orderBy: { sortOrder: "asc" } } },
     }),
     getAllCategories(),
+    getAllUnitPresetsForAdmin(),
   ]);
   if (!row) {
     notFound();
@@ -30,7 +32,14 @@ export default async function EditCalculatorPage({ params }: { params: Promise<{
         <h1 className="text-2xl font-bold text-slate-900">Edit calculator</h1>
         <p className="mt-1 text-sm text-slate-600">{row.name}</p>
         <div className="mt-8">
-          <CalculatorAdminForm mode="edit" calculatorId={row.id} initialRow={row} categoryList={categoryList} key={row.id} />
+          <CalculatorAdminForm
+            mode="edit"
+            calculatorId={row.id}
+            initialRow={row}
+            categoryList={categoryList}
+            unitPresets={unitPresets}
+            key={row.id}
+          />
         </div>
       </div>
     </div>

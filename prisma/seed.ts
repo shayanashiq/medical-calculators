@@ -8,6 +8,16 @@ if (!process.env.DATABASE_URL) {
 
 const prisma = new PrismaClient();
 
+const lengthUnitOptions = [
+  { key: "cm", label: "cm", suffix: "cm", mul: 1, min: 100, max: 250 },
+  { key: "in", label: "in", suffix: "in", mul: 2.54, min: 39.37, max: 98.43 },
+];
+
+const massUnitOptions = [
+  { key: "kg", label: "kg", suffix: "kg", mul: 1, min: 20, max: 300 },
+  { key: "lb", label: "lb", suffix: "lb", mul: 0.45359237, min: 44.09, max: 661.39 },
+];
+
 async function main() {
   await prisma.calculator.deleteMany();
 
@@ -27,7 +37,20 @@ async function main() {
       formulaPlain: "BMI = kg / m²",
       description: "Screening index for weight status using height and weight.",
       category: "anthropometry",
-      outputs: [{ label: "BMI", unit: "", formula: "weight_kg / (height_cm / 100) ^ 2", decimals: 1 }],
+      outputs: [
+        {
+          label: "BMI",
+          unit: "",
+          formula: "weight_kg / (height_cm / 100) ^ 2",
+          decimals: 1,
+          ranges: [
+            { max: 18.4, variant: "warning" },
+            { min: 18.5, max: 24.9, variant: "good" },
+            { min: 25, max: 29.9, variant: "warning" },
+            { min: 30, variant: "severe" },
+          ],
+        },
+      ],
       fields: {
         create: [
           {
@@ -39,6 +62,7 @@ async function main() {
             step: 1,
             defaultValue: 170,
             sortOrder: 0,
+            unitOptions: lengthUnitOptions,
           },
           {
             key: "weight_kg",
@@ -49,6 +73,7 @@ async function main() {
             step: 1,
             defaultValue: 70,
             sortOrder: 1,
+            unitOptions: massUnitOptions,
           },
         ],
       },
@@ -74,8 +99,28 @@ async function main() {
               { label: "Female", value: 0 },
             ],
           },
-          { key: "height_cm", label: "Height (cm)", fieldType: FieldType.NUMBER, min: 100, max: 250, step: 1, defaultValue: 170, sortOrder: 2 },
-          { key: "weight_kg", label: "Weight (kg)", fieldType: FieldType.NUMBER, min: 20, max: 300, step: 1, defaultValue: 70, sortOrder: 3 },
+          {
+            key: "height_cm",
+            label: "Height (cm)",
+            fieldType: FieldType.NUMBER,
+            min: 100,
+            max: 250,
+            step: 1,
+            defaultValue: 170,
+            sortOrder: 2,
+            unitOptions: lengthUnitOptions,
+          },
+          {
+            key: "weight_kg",
+            label: "Weight (kg)",
+            fieldType: FieldType.NUMBER,
+            min: 20,
+            max: 300,
+            step: 1,
+            defaultValue: 70,
+            sortOrder: 3,
+            unitOptions: massUnitOptions,
+          },
         ],
       },
     },
@@ -108,8 +153,28 @@ async function main() {
               { label: "Female", value: 0 },
             ],
           },
-          { key: "height_cm", label: "Height (cm)", fieldType: FieldType.NUMBER, min: 100, max: 250, step: 1, defaultValue: 170, sortOrder: 2 },
-          { key: "weight_kg", label: "Weight (kg)", fieldType: FieldType.NUMBER, min: 20, max: 300, step: 1, defaultValue: 70, sortOrder: 3 },
+          {
+            key: "height_cm",
+            label: "Height (cm)",
+            fieldType: FieldType.NUMBER,
+            min: 100,
+            max: 250,
+            step: 1,
+            defaultValue: 170,
+            sortOrder: 2,
+            unitOptions: lengthUnitOptions,
+          },
+          {
+            key: "weight_kg",
+            label: "Weight (kg)",
+            fieldType: FieldType.NUMBER,
+            min: 20,
+            max: 300,
+            step: 1,
+            defaultValue: 70,
+            sortOrder: 3,
+            unitOptions: massUnitOptions,
+          },
           {
             key: "activity",
             label: "Activity factor",
@@ -143,7 +208,17 @@ async function main() {
       ],
       fields: {
         create: [
-          { key: "height_cm", label: "Height (cm)", fieldType: FieldType.NUMBER, min: 100, max: 250, step: 1, defaultValue: 170, sortOrder: 0 },
+          {
+            key: "height_cm",
+            label: "Height (cm)",
+            fieldType: FieldType.NUMBER,
+            min: 100,
+            max: 250,
+            step: 1,
+            defaultValue: 170,
+            sortOrder: 0,
+            unitOptions: lengthUnitOptions,
+          },
           {
             key: "sex",
             label: "Sex",
@@ -167,8 +242,28 @@ async function main() {
       outputs: [{ label: "BSA", unit: "m²", formula: "sqrt(height_cm * weight_kg / 3600)", decimals: 2 }],
       fields: {
         create: [
-          { key: "height_cm", label: "Height (cm)", fieldType: FieldType.NUMBER, min: 100, max: 250, step: 1, defaultValue: 170, sortOrder: 0 },
-          { key: "weight_kg", label: "Weight (kg)", fieldType: FieldType.NUMBER, min: 20, max: 300, step: 1, defaultValue: 70, sortOrder: 1 },
+          {
+            key: "height_cm",
+            label: "Height (cm)",
+            fieldType: FieldType.NUMBER,
+            min: 100,
+            max: 250,
+            step: 1,
+            defaultValue: 170,
+            sortOrder: 0,
+            unitOptions: lengthUnitOptions,
+          },
+          {
+            key: "weight_kg",
+            label: "Weight (kg)",
+            fieldType: FieldType.NUMBER,
+            min: 20,
+            max: 300,
+            step: 1,
+            defaultValue: 70,
+            sortOrder: 1,
+            unitOptions: massUnitOptions,
+          },
         ],
       },
     },
@@ -192,7 +287,17 @@ async function main() {
       ],
       fields: {
         create: [
-          { key: "height_cm", label: "Height (cm)", fieldType: FieldType.NUMBER, min: 100, max: 250, step: 1, defaultValue: 170, sortOrder: 0 },
+          {
+            key: "height_cm",
+            label: "Height (cm)",
+            fieldType: FieldType.NUMBER,
+            min: 100,
+            max: 250,
+            step: 1,
+            defaultValue: 170,
+            sortOrder: 0,
+            unitOptions: lengthUnitOptions,
+          },
           {
             key: "sex",
             label: "Sex",
@@ -222,7 +327,17 @@ async function main() {
       ],
       fields: {
         create: [
-          { key: "weight_kg", label: "Weight (kg)", fieldType: FieldType.NUMBER, min: 20, max: 300, step: 1, defaultValue: 70, sortOrder: 0 },
+          {
+            key: "weight_kg",
+            label: "Weight (kg)",
+            fieldType: FieldType.NUMBER,
+            min: 20,
+            max: 300,
+            step: 1,
+            defaultValue: 70,
+            sortOrder: 0,
+            unitOptions: massUnitOptions,
+          },
         ],
       },
     },
@@ -278,7 +393,17 @@ async function main() {
       fields: {
         create: [
           { key: "age", label: "Age (years)", fieldType: FieldType.NUMBER, min: 1, max: 120, step: 1, defaultValue: 30, sortOrder: 0 },
-          { key: "weight_kg", label: "Weight (kg)", fieldType: FieldType.NUMBER, min: 20, max: 300, step: 1, defaultValue: 70, sortOrder: 1 },
+          {
+            key: "weight_kg",
+            label: "Weight (kg)",
+            fieldType: FieldType.NUMBER,
+            min: 20,
+            max: 300,
+            step: 1,
+            defaultValue: 70,
+            sortOrder: 1,
+            unitOptions: massUnitOptions,
+          },
           {
             key: "sex",
             label: "Sex",
@@ -350,7 +475,31 @@ async function main() {
     await prisma.calculator.create({ data });
   }
 
-  console.log(`Seeded ${calculators.length} calculators.`);
+  await prisma.unitPreset.deleteMany();
+  await prisma.unitPreset.createMany({
+    data: [
+      {
+        slug: "length-stored-as-cm",
+        name: "Length (stored as cm)",
+        description: "Use when formulas expect height in centimeters. 1 in = 2.54 cm.",
+        options: [
+          { key: "cm", label: "cm", suffix: "cm", mul: 1, min: 100, max: 250 },
+          { key: "in", label: "in", suffix: "in", mul: 2.54, min: 39.37, max: 98.43 },
+        ],
+      },
+      {
+        slug: "mass-stored-as-kg",
+        name: "Mass (stored as kg)",
+        description: "Use when formulas expect weight in kilograms.",
+        options: [
+          { key: "kg", label: "kg", suffix: "kg", mul: 1, min: 20, max: 300 },
+          { key: "lb", label: "lb", suffix: "lb", mul: 0.45359237, min: 44.09, max: 661.39 },
+        ],
+      },
+    ],
+  });
+
+  console.log(`Seeded ${calculators.length} calculators and default unit presets.`);
 }
 
 main()

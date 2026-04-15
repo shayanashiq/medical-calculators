@@ -72,3 +72,56 @@ select {
 .category-slider-track::-webkit-scrollbar {
   display: none;
 }
+
+/* Basic styling for admin-authored calculator HTML content. */
+.calc-html :where(h2) {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: rgb(15 23 42);
+}
+
+.calc-html :where(h3) {
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: rgb(15 23 42);
+}
+
+.calc-html :where(p, ul, ol) {
+  color: rgb(51 65 85);
+  line-height: 1.75;
+}
+
+.calc-html :where(ul, ol) {
+  padding-left: 1.25rem;
+}
+
+.calc-html :where(li) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.calc-html :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.calc-html :where(th, td) {
+  border: 1px solid rgb(226 232 240);
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+}
+
+.calc-html :where(th) {
+  background: rgb(248 250 252);
+  font-weight: 800;
+  color: rgb(15 23 42);
+}

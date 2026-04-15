@@ -80,7 +80,10 @@ export function runCalculator(
   fields: CalculatorField[],
   raw: Record<string, unknown>,
 ):
-  | { ok: true; results: { label: string; unit: string; value: number }[] }
+  | {
+      ok: true;
+      results: { label: string; unit: string; value: number; variant?: "good" | "warning" | "severe" | "neutral" }[];
+    }
   | { ok: false; error: string } {
   const normalized = normalizeFieldValues(fields, raw);
   if (!normalized.ok) {
@@ -108,7 +111,25 @@ export function runCalculator(
       const decimals = o.decimals ?? 1;
       const factor = 10 ** decimals;
       const rounded = Math.round(rawValue * factor) / factor;
-      return { label: o.label, unit: o.unit, value: rounded };
+
+      let variant: "good" | "warning" | "severe" | "neutral" = "good";
+      if (Array.isArray(o.ranges) && o.ranges.length > 0) {
+        let matched = false;
+        for (const r of o.ranges) {
+          const minOk = typeof r.min === "number" ? rounded >= r.min : true;
+          const maxOk = typeof r.max === "number" ? rounded <= r.max : true;
+          if (minOk && maxOk) {
+            variant = r.variant;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          variant = "warning";
+        }
+      }
+
+      return { label: o.label, unit: o.unit, value: rounded, variant };
     });
     return { ok: true, results };
   } catch (e) {

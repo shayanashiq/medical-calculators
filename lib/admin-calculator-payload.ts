@@ -11,6 +11,7 @@ export type IncomingOutput = {
   unit: string;
   formula: string;
   decimals?: number;
+  ranges?: Array<{ min?: number; max?: number; variant: "good" | "warning" | "severe" }>;
 };
 
 export type IncomingField = {
@@ -23,6 +24,15 @@ export type IncomingField = {
   defaultValue?: number;
   sortOrder?: number;
   selectOptions?: { label: string; value: number }[] | null;
+  unitOptions?: Array<{
+    key: string;
+    label: string;
+    suffix?: string;
+    mul: number;
+    add?: number;
+    min?: number;
+    max?: number;
+  }> | null;
 };
 
 export type IncomingCalculatorBody = {
@@ -32,6 +42,7 @@ export type IncomingCalculatorBody = {
   formulaPlain: string;
   category: string;
   imageUrl: string | null;
+  contentHtml?: string | null;
   showOnHome: boolean;
   outputs: IncomingOutput[];
   fields: IncomingField[];
@@ -83,6 +94,7 @@ function toTempFields(rows: IncomingField[]): CalculatorField[] {
     step: f.step ?? 1,
     defaultValue: f.defaultValue ?? 0,
     selectOptions: f.selectOptions ?? null,
+    unitOptions: f.unitOptions ?? null,
     sortOrder: f.sortOrder ?? i,
   }));
 }
@@ -126,6 +138,12 @@ export function validateIncomingCalculator(
     };
   }
 
+  const contentHtmlRaw = typeof b.contentHtml === "string" ? b.contentHtml : null;
+  const contentHtml = contentHtmlRaw?.trim() ? contentHtmlRaw : null;
+  if (contentHtml && contentHtml.length > 50_000) {
+    return { ok: false, error: "Content HTML is too long (max 50,000 characters)." };
+  }
+
   if (!Array.isArray(b.outputs) || b.outputs.length === 0) {
     return { ok: false, error: "At least one output with a formula is required." };
   }
@@ -143,7 +161,32 @@ export function validateIncomingCalculator(
       return { ok: false, error: "Each output needs a label and formula." };
     }
     const decimals = typeof out.decimals === "number" && Number.isFinite(out.decimals) ? out.decimals : undefined;
-    outputs.push({ label, unit, formula, decimals });
+
+    let ranges: IncomingOutput["ranges"] = undefined;
+    if ("ranges" in out && out.ranges != null) {
+      if (!Array.isArray(out.ranges)) {
+        return { ok: false, error: "Output ranges must be an array." };
+      }
+      ranges = [];
+      for (const r of out.ranges) {
+        if (!r || typeof r !== "object") {
+          return { ok: false, error: "Each range must be an object." };
+        }
+        const rr = r as Record<string, unknown>;
+        const min = typeof rr.min === "number" && Number.isFinite(rr.min) ? rr.min : undefined;
+        const max = typeof rr.max === "number" && Number.isFinite(rr.max) ? rr.max : undefined;
+        const variant = rr.variant === "good" || rr.variant === "warning" || rr.variant === "severe" ? rr.variant : null;
+        if (!variant) {
+          return { ok: false, error: "Each range needs variant: good | warning | severe." };
+        }
+        if (min == null && max == null) {
+          return { ok: false, error: "Each range must have at least min or max." };
+        }
+        ranges.push({ min, max, variant });
+      }
+    }
+
+    outputs.push({ label, unit, formula, decimals, ranges });
   }
 
   if (!Array.isArray(b.fields) || b.fields.length === 0) {
@@ -210,6 +253,42 @@ export function validateIncomingCalculator(
       }
     }
 
+    let unitOptions: IncomingField["unitOptions"] = null;
+    if (fieldType === "NUMBER" && "unitOptions" in f && f.unitOptions != null) {
+      if (!Array.isArray(f.unitOptions)) {
+        return { ok: false, error: `unitOptions for “${label}” must be an array.` };
+      }
+      unitOptions = [];
+      const seenUnitKeys = new Set<string>();
+      for (const opt of f.unitOptions) {
+        if (!opt || typeof opt !== "object") {
+          return { ok: false, error: `Invalid unit option for “${label}”.` };
+        }
+        const u = opt as Record<string, unknown>;
+        const uKey = typeof u.key === "string" ? u.key.trim() : "";
+        const uLabel = typeof u.label === "string" ? u.label.trim() : "";
+        const suffix = typeof u.suffix === "string" ? u.suffix : undefined;
+        const mul = typeof u.mul === "number" && Number.isFinite(u.mul) ? u.mul : Number.NaN;
+        const add = typeof u.add === "number" && Number.isFinite(u.add) ? u.add : undefined;
+        const min = typeof u.min === "number" && Number.isFinite(u.min) ? u.min : undefined;
+        const max = typeof u.max === "number" && Number.isFinite(u.max) ? u.max : undefined;
+        if (!uKey || !uLabel || !Number.isFinite(mul)) {
+          return { ok: false, error: `Each unit option for “${label}” needs key, label, and numeric mul.` };
+        }
+        if (mul === 0) {
+          return { ok: false, error: `Unit option mul cannot be 0 for “${label}”.` };
+        }
+        if (seenUnitKeys.has(uKey)) {
+          return { ok: false, error: `Duplicate unit option key “${uKey}” for “${label}”.` };
+        }
+        seenUnitKeys.add(uKey);
+        unitOptions.push({ key: uKey, label: uLabel, suffix, mul, add, min, max });
+      }
+      if (unitOptions.length < 2) {
+        unitOptions = null;
+      }
+    }
+
     fields.push({
       key,
       label,
@@ -220,6 +299,7 @@ export function validateIncomingCalculator(
       defaultValue,
       sortOrder,
       selectOptions,
+      unitOptions,
     });
     i += 1;
   }
@@ -242,6 +322,7 @@ export function validateIncomingCalculator(
     formulaPlain,
     category,
     imageUrl,
+    contentHtml,
     showOnHome,
     outputs,
     fields,

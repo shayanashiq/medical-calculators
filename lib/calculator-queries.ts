@@ -115,6 +115,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     step: f.step,
     defaultValue: f.defaultValue,
     selectOptions: f.selectOptions as PublicField["selectOptions"],
+    unitOptions: (f.unitOptions as PublicField["unitOptions"]) ?? null,
   }));
   return {
     slug: row.slug,
@@ -125,6 +126,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     imageUrl: row.imageUrl,
     showOnHome: row.showOnHome,
     fields,
+    contentHtml: row.contentHtml ?? null,
   };
 }
 

@@ -14,6 +14,11 @@ export type CalculatorOutputDef = {
   unit: string;
   formula: string;
   decimals?: number;
+  ranges?: Array<{
+    min?: number;
+    max?: number;
+    variant: "good" | "warning" | "severe";
+  }>;
 };
 
 export type PublicField = {
@@ -25,8 +30,18 @@ export type PublicField = {
   step: number;
   defaultValue: number;
   selectOptions: { label: string; value: number }[] | null;
+  unitOptions?: Array<{
+    key: string;
+    label: string;
+    suffix?: string;
+    mul: number;
+    add?: number;
+    min?: number;
+    max?: number;
+  }> | null;
 };
 
 export type PublicCalculator = CalculatorListItem & {
   fields: PublicField[];
+  contentHtml?: string | null;
 };

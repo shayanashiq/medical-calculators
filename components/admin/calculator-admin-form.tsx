@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { IncomingField, IncomingOutput } from "@/lib/admin-calculator-payload";
 import type { CalculatorCategory } from "@/lib/categories";
+import type { UnitPresetListItem } from "@/lib/unit-preset-types";
 
 type AdminRow = {
   id: string;
@@ -15,6 +16,7 @@ type AdminRow = {
   formulaPlain: string;
   category: string;
   imageUrl: string | null;
+  contentHtml: string | null;
   showOnHome: boolean;
   outputs: unknown;
   validationExpr: string | null;
@@ -29,6 +31,7 @@ type AdminRow = {
     defaultValue: number;
     sortOrder: number;
     selectOptions: unknown;
+    unitOptions: unknown;
   }[];
 };
 
@@ -40,6 +43,7 @@ function mapRowToForm(row: AdminRow) {
     formulaPlain: row.formulaPlain,
     category: row.category,
     imageUrl: row.imageUrl ?? "",
+    contentHtml: row.contentHtml ?? "",
     showOnHome: row.showOnHome ?? false,
     outputs: row.outputs as IncomingOutput[],
     validationExpr: row.validationExpr,
@@ -54,6 +58,16 @@ function mapRowToForm(row: AdminRow) {
       defaultValue: f.defaultValue,
       sortOrder: f.sortOrder,
       selectOptions: (f.selectOptions as { label: string; value: number }[] | null) ?? null,
+      unitOptions:
+        (f.unitOptions as {
+          key: string;
+          label: string;
+          suffix?: string;
+          mul: number;
+          add?: number;
+          min?: number;
+          max?: number;
+        }[] | null) ?? null,
     })),
   };
 }
@@ -64,6 +78,7 @@ const defaultFormWithoutCategory = {
   description: "",
   formulaPlain: "",
   imageUrl: "",
+  contentHtml: "",
   outputs: [{ label: "Result", unit: "", formula: "", decimals: 1 }] as IncomingOutput[],
   fields: [
     {
@@ -76,6 +91,7 @@ const defaultFormWithoutCategory = {
       defaultValue: 1,
       sortOrder: 0,
       selectOptions: null as { label: string; value: number }[] | null,
+      unitOptions: null,
     },
   ] as IncomingField[],
   validationExpr: null as string | null,
@@ -95,9 +111,10 @@ type Props = {
   calculatorId?: string;
   initialRow?: AdminRow | null;
   categoryList: CalculatorCategory[];
+  unitPresets: UnitPresetListItem[];
 };
 
-export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryList }: Props) {
+export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryList, unitPresets }: Props) {
   const router = useRouter();
   const [form, setForm] = useState(() =>
     initialRow ? mapRowToForm(initialRow) : defaultFormForCategories(categoryList),
@@ -171,6 +188,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           defaultValue: 0,
           sortOrder: f.fields.length,
           selectOptions: null,
+          unitOptions: null,
         },
       ],
     }));
@@ -222,6 +240,60 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
     });
   };
 
+  const addUnitOption = (fieldIndex: number) => {
+    setForm((f) => {
+      const fields = f.fields.map((fld, i) => {
+        if (i !== fieldIndex || fld.fieldType !== "NUMBER") {
+          return fld;
+        }
+        const opts = [
+          ...(fld.unitOptions ?? []),
+          { key: `u${(fld.unitOptions?.length ?? 0) + 1}`, label: "Unit", suffix: "", mul: 1 },
+        ];
+        return { ...fld, unitOptions: opts };
+      });
+      return { ...f, fields };
+    });
+  };
+
+  const setUnitOption = (
+    fieldIndex: number,
+    optIndex: number,
+    patch: {
+      key?: string;
+      label?: string;
+      suffix?: string;
+      mul?: number;
+      add?: number;
+      min?: number;
+      max?: number;
+    },
+  ) => {
+    setForm((f) => {
+      const fields = f.fields.map((fld, i) => {
+        if (i !== fieldIndex || fld.fieldType !== "NUMBER") {
+          return fld;
+        }
+        const opts = (fld.unitOptions ?? []).map((o, j) => (j === optIndex ? { ...o, ...patch } : o));
+        return { ...fld, unitOptions: opts };
+      });
+      return { ...f, fields };
+    });
+  };
+
+  const removeUnitOption = (fieldIndex: number, optIndex: number) => {
+    setForm((f) => {
+      const fields = f.fields.map((fld, i) => {
+        if (i !== fieldIndex || fld.fieldType !== "NUMBER") {
+          return fld;
+        }
+        const opts = (fld.unitOptions ?? []).filter((_, j) => j !== optIndex);
+        return { ...fld, unitOptions: opts };
+      });
+      return { ...f, fields };
+    });
+  };
+
   async function submit() {
     setError(null);
     setSaving(true);
@@ -232,12 +304,14 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       formulaPlain: form.formulaPlain.trim(),
       category: form.category,
       imageUrl: form.imageUrl.trim() || null,
+      contentHtml: form.contentHtml.trim() || null,
       showOnHome: form.showOnHome,
       outputs: form.outputs.map((o) => ({
         label: o.label.trim(),
         unit: o.unit.trim(),
         formula: o.formula.trim(),
         decimals: o.decimals,
+        ranges: o.ranges,
       })),
       fields: form.fields.map((fld, idx) => ({
         key: fld.key.trim(),
@@ -249,6 +323,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
         defaultValue: fld.defaultValue,
         sortOrder: idx,
         selectOptions: fld.fieldType === "SELECT" ? fld.selectOptions : null,
+        unitOptions: fld.fieldType === "NUMBER" ? (fld.unitOptions ?? null) : null,
       })),
       validationExpr: form.validationExpr?.trim() || null,
       validationMessage: form.validationMessage?.trim() || null,
@@ -307,6 +382,20 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
             onChange={(e) => setForm((f) => ({ ...f, formulaPlain: e.target.value }))}
             className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
             placeholder="Shown under the title, e.g. BMI = kg / m²"
+          />
+        </label>
+
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-sm font-semibold text-slate-700">Calculator page content (HTML)</span>
+          <p className="mb-2 text-xs text-slate-500">
+            Optional. This HTML appears under the calculator on the public calculator page.
+          </p>
+          <textarea
+            value={form.contentHtml}
+            onChange={(e) => setForm((f) => ({ ...f, contentHtml: e.target.value }))}
+            rows={8}
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm shadow-sm"
+            placeholder={`<h2>What is BMI and why it matters?</h2>\n<p>...</p>`}
           />
         </label>
         <label className="block">
@@ -452,6 +541,31 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                     className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
                   />
                 </label>
+
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-xs font-semibold text-slate-600">
+                    Severity ranges (JSON, optional)
+                  </span>
+                  <textarea
+                    value={JSON.stringify(o.ranges ?? [], null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value || "[]") as unknown;
+                        if (!Array.isArray(parsed)) {
+                          setError("Ranges must be a JSON array.");
+                          return;
+                        }
+                        setError(null);
+                        setOutput(i, { ranges: parsed as any });
+                      } catch {
+                        setError("Ranges JSON is invalid.");
+                      }
+                    }}
+                    rows={4}
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 font-mono text-sm"
+                    placeholder='[{"max": 24.9, "variant": "good"}, {"min": 25, "max": 29.9, "variant": "warning"}, {"min": 30, "variant": "severe"}]'
+                  />
+                </label>
               </div>
             </div>
           ))}
@@ -557,6 +671,140 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                         className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
                       />
                     </label>
+
+                    <label className="block sm:col-span-2">
+                      <span className="mb-1 block text-xs font-semibold text-slate-600">Unit preset (library)</span>
+                      <p className="mb-1.5 text-[11px] leading-relaxed text-slate-500">
+                        Manage presets under{" "}
+                        <Link href="/admin/unit-presets" className="font-semibold text-sky-700 hover:underline">
+                          Unit presets
+                        </Link>
+                        . Choosing one here copies its units into this field (you can still edit the JSON below).
+                      </p>
+                      <select
+                        className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          e.currentTarget.selectedIndex = 0;
+                          if (!id) {
+                            return;
+                          }
+                          const preset = unitPresets.find((p) => p.id === id);
+                          if (!preset || preset.options.length < 2) {
+                            return;
+                          }
+                          setError(null);
+                          setField(i, { unitOptions: preset.options.map((o) => ({ ...o })) });
+                        }}
+                      >
+                        <option value="">— Load saved units into this field —</option>
+                        {unitPresets.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div className="block sm:col-span-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="mb-1 block text-xs font-semibold text-slate-600">Unit options</span>
+                        <button
+                          type="button"
+                          onClick={() => addUnitOption(i)}
+                          className="text-xs font-semibold text-sky-700 hover:text-sky-900"
+                        >
+                          + Add unit
+                        </button>
+                      </div>
+                      <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
+                        Set conversion and per-unit limits. Stored formula value is{" "}
+                        <code className="rounded bg-slate-100 px-1">{"(x + add) * mul"}</code>.
+                      </p>
+                      <div className="space-y-2">
+                        {(fld.unitOptions ?? []).map((opt, unitIdx) => (
+                          <div key={unitIdx} className="grid gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:grid-cols-12">
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Key</span>
+                              <input
+                                value={opt.key}
+                                onChange={(e) => setUnitOption(i, unitIdx, { key: e.target.value })}
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs font-mono"
+                                placeholder="cm"
+                              />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Label</span>
+                              <input
+                                value={opt.label}
+                                onChange={(e) => setUnitOption(i, unitIdx, { label: e.target.value })}
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                placeholder="Centimeters"
+                              />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">Suffix</span>
+                              <input
+                                value={opt.suffix ?? ""}
+                                onChange={(e) => setUnitOption(i, unitIdx, { suffix: e.target.value })}
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                placeholder="cm"
+                              />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">mul</span>
+                              <input
+                                type="number"
+                                step="any"
+                                value={opt.mul}
+                                onChange={(e) => setUnitOption(i, unitIdx, { mul: Number(e.target.value) })}
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">min</span>
+                              <input
+                                type="number"
+                                step="any"
+                                value={opt.min ?? ""}
+                                onChange={(e) =>
+                                  setUnitOption(i, unitIdx, {
+                                    min: e.target.value === "" ? undefined : Number(e.target.value),
+                                  })
+                                }
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                placeholder="optional"
+                              />
+                            </label>
+                            <label className="sm:col-span-1">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">max</span>
+                              <input
+                                type="number"
+                                step="any"
+                                value={opt.max ?? ""}
+                                onChange={(e) =>
+                                  setUnitOption(i, unitIdx, {
+                                    max: e.target.value === "" ? undefined : Number(e.target.value),
+                                  })
+                                }
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                placeholder="optional"
+                              />
+                            </label>
+                            <div className="flex items-end justify-end sm:col-span-1">
+                              <button
+                                type="button"
+                                onClick={() => removeUnitOption(i, unitIdx)}
+                                className="text-xs font-semibold text-red-600"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <div className="sm:col-span-2">
