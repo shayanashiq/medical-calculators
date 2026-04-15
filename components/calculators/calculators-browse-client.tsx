@@ -5,7 +5,6 @@ import Link from "next/link";
 import { CalculatorTileCard } from "@/components/cards/calculator-tile-card";
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 import type { CalculatorListItem } from "@/lib/calculator-types";
-import { calculatorCardGradients } from "@/lib/home-gradients";
 
 const PAGE_SIZE = 12;
 
@@ -145,7 +144,6 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
           <CalculatorTileCard
             key={item.slug}
             calculator={item}
-            gradientClass={calculatorCardGradients[idx % calculatorCardGradients.length]}
           />
         ))}
       </section>

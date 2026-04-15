@@ -32,7 +32,7 @@ export function ShareCalculatorButton() {
     <button
       type="button"
       onClick={() => void share()}
-      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-teal-600 via-cyan-600 to-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-900/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2"
+      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-teal-600 via-cyan-600 to-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-900/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 cursor-pointer"
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
         <circle cx="18" cy="5" r="3" />

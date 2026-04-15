@@ -7,7 +7,6 @@ import { PaginationBar } from "@/components/ui/pagination-bar";
 import { getCategoryVisual } from "@/lib/category-visuals";
 import { getCategoryBySlug } from "@/lib/categories";
 import { getCalculatorsByCategoryPaginated } from "@/lib/calculator-queries";
-import { calculatorCardGradients } from "@/lib/home-gradients";
 import { parsePageParam } from "@/lib/list-pagination";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/absolute-url";
@@ -190,7 +189,6 @@ export default async function CategoryPage({
                   <CalculatorTileCard
                     key={item.slug}
                     calculator={item}
-                    gradientClass={calculatorCardGradients[idx % calculatorCardGradients.length]}
                   />
                 ))}
               </section>

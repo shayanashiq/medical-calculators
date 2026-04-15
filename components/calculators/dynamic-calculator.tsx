@@ -188,31 +188,48 @@ export function DynamicCalculator({ calculator }: Props) {
   const BmiScale = ({ value }: { value: number }) => {
     const clamped = Math.max(10, Math.min(40, value));
     const pct = ((clamped - 10) / (40 - 10)) * 100;
-    const markerLeft = `clamp(12px, ${pct}%, calc(100% - 12px))`;
+    const markerLeft = `clamp(14px, ${pct}%, calc(100% - 14px))`;
     return (
       <div className="mt-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Visual indicator</p>
+
         <div className="relative">
-          <div className="grid grid-cols-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="bg-amber-100 px-2 py-2 text-center text-[11px] font-semibold text-amber-900">
-              Under
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="h-3 w-full">
+              <div className="grid h-full grid-cols-4">
+                <div className="bg-gradient-to-r from-amber-200 to-amber-100" />
+                <div className="bg-gradient-to-r from-emerald-200 to-emerald-100" />
+                <div className="bg-gradient-to-r from-orange-200 to-orange-100" />
+                <div className="bg-gradient-to-r from-red-200 to-red-100" />
+              </div>
             </div>
-            <div className="bg-emerald-100 px-2 py-2 text-center text-[11px] font-semibold text-emerald-900">
-              Normal
-            </div>
-            <div className="bg-orange-100 px-2 py-2 text-center text-[11px] font-semibold text-orange-900">
-              Over
-            </div>
-            <div className="bg-red-100 px-2 py-2 text-center text-[11px] font-semibold text-red-900">
-              Obese
+            <div className="grid grid-cols-4 border-t border-slate-100 px-3 py-2 text-[11px]">
+              <div className="pr-2 text-left font-semibold text-amber-900">
+                Under
+                <span className="ml-1 font-medium text-amber-900/70">&lt;18.5</span>
+              </div>
+              <div className="px-2 text-center font-semibold text-emerald-900">
+                Normal
+                <span className="ml-1 font-medium text-emerald-900/70">18.5–24.9</span>
+              </div>
+              <div className="px-2 text-center font-semibold text-orange-900">
+                Over
+                <span className="ml-1 font-medium text-orange-900/70">25–29.9</span>
+              </div>
+              <div className="pl-2 text-right font-semibold text-red-900">
+                Obese
+                <span className="ml-1 font-medium text-red-900/70">30+</span>
+              </div>
             </div>
           </div>
-          <div className="pointer-events-none absolute -top-2 -translate-x-1/2" style={{ left: markerLeft }}>
-            <div>
-              <div className="h-3 w-0 border-l-2 border-slate-900/70" />
-              <p className="mt-1 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-slate-700">
-                ↑ Your BMI
-              </p>
+
+          <div className="pointer-events-none absolute -top-7 -translate-x-1/2" style={{ left: markerLeft }}>
+            <div className="flex flex-col items-center">
+              <div className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-800 shadow-sm">
+                BMI {Math.round(value * 10) / 10}
+              </div>
+              <div className="-mt-1 h-0 w-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white drop-shadow-[0_1px_0_rgba(148,163,184,0.9)]" />
+              <div className="-mt-1 h-4 w-0 border-l-2 border-slate-900/70" />
             </div>
           </div>
         </div>

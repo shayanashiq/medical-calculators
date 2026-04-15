@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CalculatorTileCard } from "@/components/cards/calculator-tile-card";
 import type { CalculatorListItem } from "@/lib/calculator-types";
-import { calculatorCardGradients } from "@/lib/home-gradients";
 
 type Props = {
   calculators: CalculatorListItem[];
@@ -41,10 +40,7 @@ export function HomeFeaturedCalculatorsSection({ calculators: items }: Props) {
           <div className="mt-10 grid justify-items-center gap-5 sm:grid-cols-2 sm:justify-items-stretch lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item, idx) => (
               <div key={item.slug} className="w-full max-w-[22rem] sm:max-w-none">
-                <CalculatorTileCard
-                  calculator={item}
-                  gradientClass={calculatorCardGradients[idx % calculatorCardGradients.length]}
-                />
+                <CalculatorTileCard calculator={item} />
               </div>
             ))}
           </div>
