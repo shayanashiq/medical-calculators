@@ -13,11 +13,16 @@ export type CalculatorOutputDef = {
   label: string;
   unit: string;
   formula: string;
+  /** Used when output has no ranges, or as fallback guidance text. */
+  guidance?: string;
+  /** Optional limitation notes for this output/calculator result. */
+  limitations?: string;
   decimals?: number;
   ranges?: Array<{
     min?: number;
     max?: number;
     variant: "good" | "warning" | "severe";
+    guidance?: string;
   }>;
 };
 

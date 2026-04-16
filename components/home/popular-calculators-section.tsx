@@ -9,7 +9,7 @@ type Props = {
 
 export function PopularCalculatorsSection({ calculators, totalCount }: Props) {
   return (
-    <section className="border-t border-slate-100 bg-gradient-to-b from-white to-slate-50/80">
+    <section className="border-t border-slate-100 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Popular calculators

@@ -57,7 +57,7 @@ export default async function CalculatorPage({
   const category = await getCategoryBySlug(calculator.category);
 
   return (
-    <main className="mx-auto w-full max-w-4xl bg-white px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <Link href="/" className="font-semibold text-sky-700 hover:text-sky-800">
           Home
@@ -104,7 +104,7 @@ export default async function CalculatorPage({
       </section>
 
       {calculator.contentHtml?.trim() ? (
-        <section className="calc-html rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="calc-html calc-html--article rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           <div dangerouslySetInnerHTML={{ __html: calculator.contentHtml }} />
         </section>
       ) : null}

@@ -35,6 +35,133 @@ type AdminRow = {
   }[];
 };
 
+type ContentSections = {
+  interpretationTable: string;
+  whatIsBmi: string;
+  formulaUsed: string;
+  howToUse: string;
+  clinicalSignificance: string;
+  disclaimer: string;
+  references: string;
+};
+
+const contentSectionOrder: Array<{ key: keyof ContentSections; title: string }> = [
+  { key: "interpretationTable", title: "Interpretation Table" },
+  { key: "whatIsBmi", title: "What is BMI?" },
+  { key: "formulaUsed", title: "Formula Used" },
+  { key: "howToUse", title: "How to Use" },
+  { key: "clinicalSignificance", title: "Clinical Significance" },
+  { key: "disclaimer", title: "Disclaimer" },
+  { key: "references", title: "References" },
+];
+
+const emptyContentSections: ContentSections = {
+  interpretationTable: "",
+  whatIsBmi: "",
+  formulaUsed: "",
+  howToUse: "",
+  clinicalSignificance: "",
+  disclaimer: "",
+  references: "",
+};
+
+const bmiContentTemplate: ContentSections = {
+  interpretationTable: `<table>
+  <thead><tr><th>Category</th><th>BMI range (kg/m²)</th></tr></thead>
+  <tbody>
+    <tr><td>Underweight</td><td>&lt; 18.5</td></tr>
+    <tr><td>Normal</td><td>18.5 - 24.9</td></tr>
+    <tr><td>Overweight</td><td>25.0 - 29.9</td></tr>
+    <tr><td>Obese</td><td>= 30.0</td></tr>
+  </tbody>
+</table>`,
+  whatIsBmi:
+    "Body Mass Index (BMI) is a simple screening measure based on weight and height. It helps classify weight status but does not directly measure body fat.",
+  formulaUsed: "BMI = weight (kg) / [height (m)]²",
+  howToUse:
+    "1) Enter your height and weight.\n2) Select preferred units.\n3) Review the indicator and category.\n4) Use the result as a screening guide, not a diagnosis.",
+  clinicalSignificance:
+    "BMI is used in public health and clinical triage to flag potential nutrition and cardiometabolic risk. Interpretation should be combined with history, body composition, and clinical examination.",
+  disclaimer:
+    "This calculator is for educational screening only and does not replace professional medical advice, diagnosis, or treatment.",
+  references:
+    "World Health Organization (WHO). BMI classification.\nCDC. About Adult BMI.\nNICE guideline: Obesity identification, assessment and management.",
+};
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function paragraphsFromText(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => `<p>${escapeHtml(chunk).replaceAll("\n", "<br />")}</p>`)
+    .join("");
+}
+
+function referencesFromText(text: string): string {
+  const items = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (items.length === 0) {
+    return "";
+  }
+  return `<ul>${items.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`;
+}
+
+function buildContentHtmlFromSections(sections: ContentSections): string {
+  const blocks: string[] = [];
+  const push = (title: string, bodyHtml: string) => {
+    if (!bodyHtml.trim()) {
+      return;
+    }
+    blocks.push(
+      `<section class="rounded-xl border border-slate-200 bg-white p-4"><h3>${title}</h3>${bodyHtml}</section>`,
+    );
+  };
+
+  push("Interpretation Table", sections.interpretationTable.trim());
+  push("What is BMI?", paragraphsFromText(sections.whatIsBmi));
+  push("Formula Used", `<p><code>${escapeHtml(sections.formulaUsed.trim())}</code></p>`);
+  push("How to Use", referencesFromText(sections.howToUse));
+  push("Clinical Significance", paragraphsFromText(sections.clinicalSignificance));
+  push("Disclaimer", paragraphsFromText(sections.disclaimer));
+  push("References", referencesFromText(sections.references));
+
+  if (blocks.length === 0) {
+    return "";
+  }
+  return `<div class="space-y-3">${blocks.join("")}</div>`;
+}
+
+function parseSectionsFromContentHtml(contentHtml: string | null | undefined): ContentSections {
+  const src = contentHtml ?? "";
+  if (!src.trim()) {
+    return { ...emptyContentSections };
+  }
+
+  const out = { ...emptyContentSections };
+  const get = (title: string) => {
+    const re = new RegExp(`<h3>${title}<\\/h3>([\\s\\S]*?)<\\/section>`, "i");
+    const m = src.match(re);
+    return m?.[1]?.trim() ?? "";
+  };
+  out.interpretationTable = get("Interpretation Table");
+  out.whatIsBmi = "";
+  out.formulaUsed = "";
+  out.howToUse = "";
+  out.clinicalSignificance = "";
+  out.disclaimer = "";
+  out.references = "";
+  return out;
+}
+
 function mapRowToForm(row: AdminRow) {
   return {
     slug: row.slug,
@@ -118,6 +245,9 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
   const router = useRouter();
   const [form, setForm] = useState(() =>
     initialRow ? mapRowToForm(initialRow) : defaultFormForCategories(categoryList),
+  );
+  const [sections, setSections] = useState<ContentSections>(() =>
+    parseSectionsFromContentHtml(initialRow?.contentHtml ?? defaultFormWithoutCategory.contentHtml),
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -310,6 +440,8 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
         label: o.label.trim(),
         unit: o.unit.trim(),
         formula: o.formula.trim(),
+        guidance: o.guidance?.trim() || undefined,
+        limitations: o.limitations?.trim() || undefined,
         decimals: o.decimals,
         ranges: o.ranges,
       })),
@@ -345,6 +477,15 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
     router.push("/admin/calculators");
     router.refresh();
   }
+
+  const updateSections = (patch: Partial<ContentSections>) => {
+    setSections((prev) => {
+      const next = { ...prev, ...patch };
+      const html = buildContentHtmlFromSections(next);
+      setForm((f) => ({ ...f, contentHtml: html }));
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -385,19 +526,59 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           />
         </label>
 
-        <label className="block sm:col-span-2">
-          <span className="mb-1 block text-sm font-semibold text-slate-700">Calculator page content (HTML)</span>
-          <p className="mb-2 text-xs text-slate-500">
-            Optional. This HTML appears under the calculator on the public calculator page.
-          </p>
-          <textarea
-            value={form.contentHtml}
-            onChange={(e) => setForm((f) => ({ ...f, contentHtml: e.target.value }))}
-            rows={8}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm shadow-sm"
-            placeholder={`<h2>What is BMI and why it matters?</h2>\n<p>...</p>`}
-          />
-        </label>
+        <div className="block sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span className="block text-sm font-semibold text-slate-700">Calculator page content builder</span>
+              <p className="mt-1 text-xs text-slate-500">
+                Easy section editor for: Interpretation Table, What is BMI, Formula, How to Use, Clinical Significance, Disclaimer, and References.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSections(bmiContentTemplate);
+                setForm((f) => ({ ...f, contentHtml: buildContentHtmlFromSections(bmiContentTemplate) }));
+              }}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Use BMI sample content
+            </button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {contentSectionOrder.map((section) => (
+              <label key={section.key} className={`block ${section.key === "interpretationTable" ? "sm:col-span-2" : ""}`}>
+                <span className="mb-1 block text-xs font-semibold text-slate-600">{section.title}</span>
+                <textarea
+                  value={sections[section.key]}
+                  onChange={(e) => updateSections({ [section.key]: e.target.value } as Partial<ContentSections>)}
+                  rows={section.key === "interpretationTable" ? 8 : 4}
+                  className={`w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm shadow-sm ${
+                    section.key === "interpretationTable" ? "font-mono" : ""
+                  }`}
+                  placeholder={
+                    section.key === "interpretationTable"
+                      ? "<table>...</table> (HTML allowed)"
+                      : section.key === "references"
+                        ? "One reference per line"
+                        : "Write content here..."
+                  }
+                />
+              </label>
+            ))}
+          </div>
+
+          <label className="mt-3 block">
+            <span className="mb-1 block text-xs font-semibold text-slate-600">Advanced HTML preview/edit</span>
+            <textarea
+              value={form.contentHtml}
+              onChange={(e) => setForm((f) => ({ ...f, contentHtml: e.target.value }))}
+              rows={8}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs shadow-sm"
+            />
+          </label>
+        </div>
         <label className="block">
           <span className="mb-1 block text-sm font-semibold text-slate-700">Category</span>
           {categoryList.length === 0 ? (
@@ -541,6 +722,30 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                     className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
                   />
                 </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-xs font-semibold text-slate-600">
+                    Default health guidance (optional)
+                  </span>
+                  <textarea
+                    value={o.guidance ?? ""}
+                    onChange={(e) => setOutput(i, { guidance: e.target.value })}
+                    rows={2}
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    placeholder="Used for calculators without ranges, or when no range guidance is matched."
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-xs font-semibold text-slate-600">
+                    Limitations (optional)
+                  </span>
+                  <textarea
+                    value={o.limitations ?? ""}
+                    onChange={(e) => setOutput(i, { limitations: e.target.value })}
+                    rows={2}
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    placeholder="Shown on the right-side limitations card."
+                  />
+                </label>
 
                 <label className="block sm:col-span-2">
                   <span className="mb-1 block text-xs font-semibold text-slate-600">
@@ -563,7 +768,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                     }}
                     rows={4}
                     className="w-full rounded-lg border border-slate-300 px-2 py-1.5 font-mono text-sm"
-                    placeholder='[{"max": 24.9, "variant": "good"}, {"min": 25, "max": 29.9, "variant": "warning"}, {"min": 30, "variant": "severe"}]'
+                    placeholder='[{"max": 24.9, "variant": "good", "guidance": "Normal range guidance"}, {"min": 25, "max": 29.9, "variant": "warning", "guidance": "Overweight guidance"}, {"min": 30, "variant": "severe", "guidance": "Obesity guidance"}]'
                   />
                 </label>
               </div>

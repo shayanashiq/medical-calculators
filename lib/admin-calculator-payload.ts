@@ -10,8 +10,10 @@ export type IncomingOutput = {
   label: string;
   unit: string;
   formula: string;
+  guidance?: string;
+  limitations?: string;
   decimals?: number;
-  ranges?: Array<{ min?: number; max?: number; variant: "good" | "warning" | "severe" }>;
+  ranges?: Array<{ min?: number; max?: number; variant: "good" | "warning" | "severe"; guidance?: string }>;
 };
 
 export type IncomingField = {
@@ -157,6 +159,8 @@ export function validateIncomingCalculator(
     const label = typeof out.label === "string" ? out.label.trim() : "";
     const unit = typeof out.unit === "string" ? out.unit : "";
     const formula = typeof out.formula === "string" ? out.formula.trim() : "";
+    const guidance = typeof out.guidance === "string" ? out.guidance.trim() : undefined;
+    const limitations = typeof out.limitations === "string" ? out.limitations.trim() : undefined;
     if (!label || !formula) {
       return { ok: false, error: "Each output needs a label and formula." };
     }
@@ -176,17 +180,18 @@ export function validateIncomingCalculator(
         const min = typeof rr.min === "number" && Number.isFinite(rr.min) ? rr.min : undefined;
         const max = typeof rr.max === "number" && Number.isFinite(rr.max) ? rr.max : undefined;
         const variant = rr.variant === "good" || rr.variant === "warning" || rr.variant === "severe" ? rr.variant : null;
+        const rangeGuidance = typeof rr.guidance === "string" ? rr.guidance.trim() : undefined;
         if (!variant) {
           return { ok: false, error: "Each range needs variant: good | warning | severe." };
         }
         if (min == null && max == null) {
           return { ok: false, error: "Each range must have at least min or max." };
         }
-        ranges.push({ min, max, variant });
+        ranges.push({ min, max, variant, guidance: rangeGuidance });
       }
     }
 
-    outputs.push({ label, unit, formula, decimals, ranges });
+    outputs.push({ label, unit, formula, guidance, limitations, decimals, ranges });
   }
 
   if (!Array.isArray(b.fields) || b.fields.length === 0) {
