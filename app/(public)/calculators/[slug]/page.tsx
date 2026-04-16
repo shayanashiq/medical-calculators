@@ -104,7 +104,7 @@ export default async function CalculatorPage({
       </section>
 
       {calculator.contentHtml?.trim() ? (
-        <section className="calc-html calc-html--article rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="calc-html calc-html--article">
           <div dangerouslySetInnerHTML={{ __html: calculator.contentHtml }} />
         </section>
       ) : null}

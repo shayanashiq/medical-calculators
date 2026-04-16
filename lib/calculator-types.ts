@@ -48,5 +48,7 @@ export type PublicField = {
 
 export type PublicCalculator = CalculatorListItem & {
   fields: PublicField[];
+  /** Output definitions (formulas, ranges for indicator) — same order as calculate API results. */
+  outputs: CalculatorOutputDef[];
   contentHtml?: string | null;
 };

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PublicCalculator } from "@/lib/calculator-types";
 import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/components/calculators/form-controls";
+import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
 
 type Props = { calculator: PublicCalculator };
 
@@ -37,19 +38,6 @@ function variantBubbleClass(variant: "good" | "warning" | "severe" | "neutral" |
     return "border-emerald-200 bg-emerald-500 text-white";
   }
   return "border-slate-200 bg-white text-slate-800";
-}
-
-function variantArrowClass(variant: "good" | "warning" | "severe" | "neutral" | undefined) {
-  if (variant === "severe") {
-    return "border-t-red-500";
-  }
-  if (variant === "warning") {
-    return "border-t-amber-500";
-  }
-  if (variant === "good") {
-    return "border-t-emerald-500";
-  }
-  return "border-t-white";
 }
 
 function numberFieldsWithinLimits(calc: PublicCalculator, vals: Record<string, number>): boolean {
@@ -183,86 +171,19 @@ export function DynamicCalculator({ calculator }: Props) {
     () => (results ?? []).filter((r) => r.variant != null && r.variant !== "neutral"),
     [results],
   );
-  const isBmi = calculator.slug === "bmi";
-  const bmiValue = useMemo(() => {
-    if (!isBmi || !results || results.length === 0) {
-      return null;
+
+  const outputDefByLabel = useMemo(() => {
+    const m = new Map<string, (typeof calculator.outputs)[number]>();
+    for (const o of calculator.outputs) {
+      m.set(o.label, o);
     }
-    const r = results.find((x) => x.label.toLowerCase().includes("bmi")) ?? results[0];
-    return typeof r?.value === "number" && Number.isFinite(r.value) ? r.value : null;
-  }, [isBmi, results]);
+    return m;
+  }, [calculator.outputs]);
+
   const primaryResult = useMemo(() => rangedResults[0] ?? results?.[0] ?? null, [rangedResults, results]);
   const hasSideContent = Boolean(primaryResult?.guidance || primaryResult?.limitations);
 
   const shouldShowIndicatorOnly = rangedResults.length > 0;
-  const BmiScale = ({
-    value,
-    variant,
-    bubbleText,
-  }: {
-    value: number;
-    variant?: "good" | "warning" | "severe" | "neutral";
-    bubbleText?: string;
-  }) => {
-    const clamped = Math.max(10, Math.min(40, value));
-    let pct = 0;
-    if (clamped < 18.5) {
-      pct = ((clamped - 10) / (18.5 - 10)) * 25;
-    } else if (clamped < 25) {
-      pct = 25 + ((clamped - 18.5) / (25 - 18.5)) * 25;
-    } else if (clamped < 30) {
-      pct = 50 + ((clamped - 25) / (30 - 25)) * 25;
-    } else {
-      pct = 75 + ((clamped - 30) / (40 - 30)) * 25;
-    }
-    const markerLeft = `clamp(14px, ${pct}%, calc(100% - 14px))`;
-    return (
-      <div className="mt-4">
-        <div className="relative">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="h-3 w-full">
-              <div className="grid h-full grid-cols-4">
-                <div className="bg-gradient-to-r from-amber-200 to-amber-100" />
-                <div className="bg-gradient-to-r from-emerald-200 to-emerald-100" />
-                <div className="bg-gradient-to-r from-orange-200 to-orange-100" />
-                <div className="bg-gradient-to-r from-red-200 to-red-100" />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 border-t border-slate-100 px-3 py-2 text-[11px]">
-              <div className="pr-2 text-left font-semibold text-amber-900">
-                Under
-                <span className="ml-1 font-medium text-amber-900/70">&lt;18.5</span>
-              </div>
-              <div className="px-2 text-center font-semibold text-emerald-900">
-                Normal
-                <span className="ml-1 font-medium text-emerald-900/70">18.5-24.9</span>
-              </div>
-              <div className="px-2 text-center font-semibold text-orange-900">
-                Over
-                <span className="ml-1 font-medium text-orange-900/70">25-29.9</span>
-              </div>
-              <div className="pl-2 text-right font-semibold text-red-900">
-                Obese
-                <span className="ml-1 font-medium text-red-900/70">30+</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pointer-events-none absolute -top-7 -translate-x-1/2" style={{ left: markerLeft }}>
-            <div className="flex flex-col items-center">
-              <div className={`rounded-full border px-2 py-1 text-[11px] font-bold shadow-sm ${variantBubbleClass(variant)}`}>
-                {bubbleText ?? `BMI ${Math.round(value * 10) / 10}`}
-              </div>
-              <div
-                className={`-mt-1 h-0 w-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent drop-shadow-[0_1px_0_rgba(148,163,184,0.9)] ${variantArrowClass(variant)}`}
-              />
-              <div className="-mt-1 h-4 w-0 border-l-2 border-slate-900/70" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] lg:items-start">
@@ -350,38 +271,37 @@ export function DynamicCalculator({ calculator }: Props) {
               </p>
               {shouldShowIndicatorOnly ? (
                 <div className="space-y-5">
-                  {isBmi && bmiValue != null ? (
-                    <BmiScale
-                      value={bmiValue}
-                      variant={results?.find((r) => r.label.toLowerCase().includes("bmi"))?.variant}
-                      bubbleText={`BMI ${Math.round(bmiValue * 10) / 10}`}
-                    />
-                  ) : (
-                    rangedResults.map((r, idx) => (
-                      <div key={`${r.label}-${idx}`} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm font-bold text-slate-900">{r.label}</p>
-                          <span className={`rounded-full border px-3 py-1 text-xs font-bold ${variantBubbleClass(r.variant)}`}>
-                            {r.variant}
-                          </span>
-                        </div>
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                          <div className="grid h-3 grid-cols-3">
-                            <div className="bg-gradient-to-r from-amber-200 to-amber-100" />
-                            <div className="bg-gradient-to-r from-emerald-200 to-emerald-100" />
-                            <div className="bg-gradient-to-r from-red-200 to-red-100" />
+                  {rangedResults.map((r, idx) => {
+                    const resultIndex = (results ?? []).findIndex((x) => x.label === r.label);
+                    const def =
+                      outputDefByLabel.get(r.label) ?? (resultIndex >= 0 ? calculator.outputs[resultIndex] : undefined);
+                    const ranges = def?.ranges;
+                    const hasRanges = Array.isArray(ranges) && ranges.length > 0;
+                    return (
+                      <div key={`${r.label}-${idx}`}>
+                      
+                        {hasRanges ? (
+                          <RangedValueIndicator
+                            label={r.label}
+                            unit={r.unit}
+                            value={r.value}
+                            variant={r.variant}
+                            ranges={ranges}
+                            decimals={def?.decimals}
+                          />
+                        ) : (
+                          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="grid h-3 grid-cols-3">
+                              <div className="bg-gradient-to-r from-amber-200 to-amber-100" />
+                              <div className="bg-gradient-to-r from-emerald-200 to-emerald-100" />
+                              <div className="bg-gradient-to-r from-red-200 to-red-100" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${variantBubbleClass(r.variant)}`}>
-                            {r.value}
-                            {r.unit ? ` ${r.unit}` : ""}
-                          </span>
-                          {r.guidance ? <p className="text-sm text-slate-700">{r.guidance}</p> : null}
-                        </div>
+                        )}
+                        
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="space-y-3">

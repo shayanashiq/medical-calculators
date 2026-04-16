@@ -1,4 +1,9 @@
-import type { CalculatorListItem, PublicCalculator, PublicField } from "@/lib/calculator-types";
+import type {
+  CalculatorListItem,
+  CalculatorOutputDef,
+  PublicCalculator,
+  PublicField,
+} from "@/lib/calculator-types";
 import {
   CALCULATORS_PAGE_SIZE,
   totalPages as computeTotalPages,
@@ -117,6 +122,8 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     selectOptions: f.selectOptions as PublicField["selectOptions"],
     unitOptions: (f.unitOptions as PublicField["unitOptions"]) ?? null,
   }));
+  const outputs = (Array.isArray(row.outputs) ? row.outputs : []) as CalculatorOutputDef[];
+
   return {
     slug: row.slug,
     category: row.category,
@@ -126,6 +133,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     imageUrl: row.imageUrl,
     showOnHome: row.showOnHome,
     fields,
+    outputs,
     contentHtml: row.contentHtml ?? null,
   };
 }
