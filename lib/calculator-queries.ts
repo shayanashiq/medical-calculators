@@ -146,6 +146,23 @@ export async function getCalculatorsByCategory(category: string): Promise<Calcul
   });
 }
 
+export async function getRelatedCalculatorsByCategory(
+  category: string,
+  currentSlug: string,
+  limit = 6,
+): Promise<CalculatorListItem[]> {
+  const safeLimit = Math.max(1, Math.min(12, Math.floor(limit)));
+  return prisma.calculator.findMany({
+    where: {
+      category,
+      slug: { not: currentSlug },
+    },
+    select: listSelect,
+    orderBy: { name: "asc" },
+    take: safeLimit,
+  });
+}
+
 export async function getCalculatorsByCategoryPaginated(
   category: string,
   page: number,

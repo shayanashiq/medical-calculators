@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { CalculatorTileCard } from "@/components/cards/calculator-tile-card";
 import { DynamicCalculator } from "@/components/calculators/dynamic-calculator";
 import { ShareCalculatorButton } from "@/components/ui/share-calculator-button";
 import { getCategoryBySlug } from "@/lib/categories";
-import { getCalculatorBySlug } from "@/lib/calculator-queries";
+import {
+  getCalculatorBySlug,
+  getRelatedCalculatorsByCategory,
+} from "@/lib/calculator-queries";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
@@ -55,6 +59,7 @@ export default async function CalculatorPage({
   }
 
   const category = await getCategoryBySlug(calculator.category);
+  const relatedCalculators = await getRelatedCalculatorsByCategory(calculator.category, calculator.slug, 6);
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
@@ -106,6 +111,22 @@ export default async function CalculatorPage({
       {calculator.contentHtml?.trim() ? (
         <section className="calc-html calc-html--article">
           <div dangerouslySetInnerHTML={{ __html: calculator.contentHtml }} />
+        </section>
+      ) : null}
+
+      {relatedCalculators.length > 0 ? (
+        <section className="mt-8 md:mt-12 rounded-2xl border border-teal-100 bg-gradient-to-r from-emerald-50/70 via-cyan-50/60 to-blue-50/70 p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Related calculators</h2>
+            <Link href={`/categories/${calculator.category}`} className="text-sm font-semibold text-teal-700 hover:text-teal-900">
+              View all
+            </Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedCalculators.map((item) => (
+              <CalculatorTileCard key={item.slug} calculator={item} />
+            ))}
+          </div>
         </section>
       ) : null}
 
