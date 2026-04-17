@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PublicCalculator } from "@/lib/calculator-types";
 import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/components/calculators/form-controls";
 import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
@@ -75,8 +75,6 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const stickyRef = useRef<HTMLDivElement | null>(null);
-
   const run = useCallback(
     async (next: Record<string, number>) => {
       setPending(true);
@@ -112,18 +110,6 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
     [calculator.slug],
   );
 
-  useEffect(() => {
-    if (!numberFieldsWithinLimits(calculator, values)) {
-      setPending(false);
-      setError(null);
-      return;
-    }
-    const t = setTimeout(() => {
-      void run(values);
-    }, 280);
-    return () => clearTimeout(t);
-  }, [values, run, calculator]);
-
   const setNumber = (key: string, n: number) => {
     setValues((prev) => ({ ...prev, [key]: n }));
   };
@@ -158,6 +144,26 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
     });
   }, [unitOptionsByKey]);
 
+  const valuesWithinLimits = useMemo(
+    () => numberFieldsWithinLimits(calculator, values),
+    [calculator, values],
+  );
+
+  const onCalculateClick = () => {
+    if (!valuesWithinLimits) {
+      setError("Keep typing — values must stay within the allowed range for each field.");
+      return;
+    }
+    void run(values);
+  };
+
+  const onResetClick = () => {
+    setValues(initial);
+    setError(null);
+    setPending(false);
+    setResults(initialResults.length > 0 ? initialResults : null);
+  };
+
   const rangedResults = useMemo(
     () => (results ?? []).filter((r) => r.variant != null && r.variant !== "neutral"),
     [results],
@@ -180,10 +186,10 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] lg:items-start">
       <div className="rounded-2xl border border-slate-200 bg-white">
         <div className="border-b border-slate-100 p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
             <div>
               <h2 className="text-sm font-bold text-slate-900">Patient parameters</h2>
-              <p className="text-xs text-slate-500">Adjust values — results update automatically.</p>
+              <p className="text-xs text-slate-500">Adjust values, then click Calculate.</p>
             </div>
           </div>
 
@@ -250,9 +256,27 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
               ),
             )}
           </div>
+
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onResetClick}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={onCalculateClick}
+              disabled={pending}
+              className="rounded-lg border border-teal-600 bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            >
+              {pending ? "Calculating..." : "Calculate"}
+            </button>
+          </div>
         </div>
 
-        <div className="p-5 sm:p-6" ref={stickyRef}>
+        <div className="p-5 sm:p-6">
           {error ? (
             <ResultBox variant="error">{error}</ResultBox>
           ) : results && results.length > 0 ? (
@@ -311,7 +335,7 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
             <p className="text-sm text-slate-500">
               {pending
                 ? "Calculating…"
-                : numberFieldsWithinLimits(calculator, values)
+                : valuesWithinLimits
                   ? "Enter values to see results."
                   : "Keep typing — values must stay within the allowed range for each field."}
             </p>
