@@ -9,6 +9,7 @@ import {
   getCalculatorBySlug,
   getRelatedCalculatorsByCategory,
 } from "@/lib/calculator-queries";
+import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
@@ -60,6 +61,8 @@ export default async function CalculatorPage({
 
   const category = await getCategoryBySlug(calculator.category);
   const relatedCalculators = await getRelatedCalculatorsByCategory(calculator.category, calculator.slug, 6);
+  const initialValues = defaultValuesFromFields(calculator.fields);
+  const initialResults = evaluatePublicOutputs(calculator.outputs, initialValues);
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
@@ -105,7 +108,7 @@ export default async function CalculatorPage({
       </header>
 
       <section className="mb-8">
-        <DynamicCalculator calculator={calculator} />
+        <DynamicCalculator calculator={calculator} initialResults={initialResults} />
       </section>
 
       {calculator.contentHtml?.trim() ? (

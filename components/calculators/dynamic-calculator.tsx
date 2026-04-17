@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PublicCalculator } from "@/lib/calculator-types";
 import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/components/calculators/form-controls";
 import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
+import type { CalculatorResultRow } from "@/lib/public-calculator-eval";
 
-type Props = { calculator: PublicCalculator };
+type Props = { calculator: PublicCalculator; initialResults?: CalculatorResultRow[] };
 
 type UnitOption = NonNullable<NonNullable<PublicCalculator["fields"][number]["unitOptions"]>[number]>;
 
@@ -58,7 +59,7 @@ function numberFieldsWithinLimits(calc: PublicCalculator, vals: Record<string, n
   return true;
 }
 
-export function DynamicCalculator({ calculator }: Props) {
+export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
   const initial = useMemo(() => {
     const v: Record<string, number> = {};
     for (const f of calculator.fields) {
@@ -68,16 +69,9 @@ export function DynamicCalculator({ calculator }: Props) {
   }, [calculator.fields]);
 
   const [values, setValues] = useState<Record<string, number>>(initial);
-  const [results, setResults] = useState<
-    {
-      label: string;
-      unit: string;
-      value: number;
-      variant?: "good" | "warning" | "severe" | "neutral";
-      guidance?: string;
-      limitations?: string;
-    }[] | null
-  >(null);
+  const [results, setResults] = useState<CalculatorResultRow[] | null>(
+    initialResults.length > 0 ? initialResults : null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -105,13 +99,11 @@ export function DynamicCalculator({ calculator }: Props) {
           error?: string;
         };
         if (!res.ok) {
-          setResults(null);
           setError(data.error ?? "Could not calculate.");
           return;
         }
         setResults(data.results ?? null);
       } catch {
-        setResults(null);
         setError("Network error. Try again.");
       } finally {
         setPending(false);
@@ -124,7 +116,6 @@ export function DynamicCalculator({ calculator }: Props) {
     if (!numberFieldsWithinLimits(calculator, values)) {
       setPending(false);
       setError(null);
-      setResults(null);
       return;
     }
     const t = setTimeout(() => {
