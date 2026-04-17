@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       category: data.category,
       imageUrl: data.imageUrl,
       contentHtml: data.contentHtml ?? null,
+      limitationsDetailed: data.limitationsDetailed ?? null,
       showOnHome: data.showOnHome,
       outputs: data.outputs,
       validationExpr: data.validationExpr,

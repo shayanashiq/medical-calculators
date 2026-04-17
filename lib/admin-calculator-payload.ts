@@ -45,6 +45,7 @@ export type IncomingCalculatorBody = {
   category: string;
   imageUrl: string | null;
   contentHtml?: string | null;
+  limitationsDetailed?: string | null;
   showOnHome: boolean;
   outputs: IncomingOutput[];
   fields: IncomingField[];
@@ -144,6 +145,16 @@ export function validateIncomingCalculator(
   const contentHtml = contentHtmlRaw?.trim() ? contentHtmlRaw : null;
   if (contentHtml && contentHtml.length > 50_000) {
     return { ok: false, error: "Content HTML is too long (max 50,000 characters)." };
+  }
+
+  let limitationsDetailed: string | null | undefined = undefined;
+  if ("limitationsDetailed" in b) {
+    const limitationsDetailedRaw =
+      typeof b.limitationsDetailed === "string" ? b.limitationsDetailed : null;
+    limitationsDetailed = limitationsDetailedRaw?.trim() ? limitationsDetailedRaw.trim() : null;
+    if (limitationsDetailed && limitationsDetailed.length > 50_000) {
+      return { ok: false, error: "Detailed limitations text is too long (max 50,000 characters)." };
+    }
   }
 
   if (!Array.isArray(b.outputs) || b.outputs.length === 0) {
@@ -334,6 +345,9 @@ export function validateIncomingCalculator(
     validationExpr,
     validationMessage,
   };
+  if (limitationsDetailed !== undefined) {
+    data.limitationsDetailed = limitationsDetailed;
+  }
 
   const tempFields = toTempFields(fields);
   const testValues: Record<string, unknown> = {};

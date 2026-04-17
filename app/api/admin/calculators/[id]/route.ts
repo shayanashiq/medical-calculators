@@ -67,6 +67,9 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         category: data.category,
         imageUrl: data.imageUrl,
         contentHtml: data.contentHtml ?? null,
+        ...(data.limitationsDetailed !== undefined
+          ? { limitationsDetailed: data.limitationsDetailed }
+          : {}),
         showOnHome: data.showOnHome,
         outputs: data.outputs,
         validationExpr: data.validationExpr,

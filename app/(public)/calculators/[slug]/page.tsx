@@ -9,6 +9,7 @@ import {
   getCalculatorBySlug,
   getRelatedCalculatorsByCategory,
 } from "@/lib/calculator-queries";
+import { mergeArticleHtmlWithDetailedLimitations } from "@/lib/calculator-content-blocks";
 import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
@@ -63,6 +64,10 @@ export default async function CalculatorPage({
   const relatedCalculators = await getRelatedCalculatorsByCategory(calculator.category, calculator.slug, 6);
   const initialValues = defaultValuesFromFields(calculator.fields);
   const initialResults = evaluatePublicOutputs(calculator.outputs, initialValues);
+  const articleHtml = mergeArticleHtmlWithDetailedLimitations(
+    calculator.contentHtml,
+    calculator.limitationsDetailed,
+  );
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
@@ -111,9 +116,9 @@ export default async function CalculatorPage({
         <DynamicCalculator calculator={calculator} initialResults={initialResults} />
       </section>
 
-      {calculator.contentHtml?.trim() ? (
+      {articleHtml?.trim() ? (
         <section className="calc-html calc-html--article">
-          <div dangerouslySetInnerHTML={{ __html: calculator.contentHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: articleHtml }} />
         </section>
       ) : null}
 

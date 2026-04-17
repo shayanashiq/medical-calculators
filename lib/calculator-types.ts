@@ -51,4 +51,6 @@ export type PublicCalculator = CalculatorListItem & {
   /** Output definitions (formulas, ranges for indicator) — same order as calculate API results. */
   outputs: CalculatorOutputDef[];
   contentHtml?: string | null;
+  /** Long-form limitations for the article (after Clinical Significance when that section exists). */
+  limitationsDetailed?: string | null;
 };

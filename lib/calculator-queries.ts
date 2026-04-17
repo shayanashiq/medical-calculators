@@ -135,6 +135,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     fields,
     outputs,
     contentHtml: row.contentHtml ?? null,
+    limitationsDetailed: row.limitationsDetailed ?? null,
   };
 }
 

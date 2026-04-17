@@ -33,6 +33,8 @@ model Calculator {
   imageUrl          String?
   /// Optional admin-authored HTML content shown on the calculator page.
   contentHtml       String?
+  /// Longer limitations copy for the article area (inserted after Clinical Significance when present).
+  limitationsDetailed String?
   /// JSON: [{ "label": string, "unit": string, "formula": string, "decimals"?: number }]
   outputs           Json
   /// Optional expression that must evaluate to non-zero (same variables as outputs).
