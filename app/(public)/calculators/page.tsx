@@ -1,22 +1,30 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { CalculatorsBrowseClient } from "@/components/calculators/calculators-browse-client";
-import { browseCalculatorsChunk } from "@/lib/calculator-queries";
+import { browseCalculatorsChunk, getCalculatorCount } from "@/lib/calculator-queries";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_DOMAIN } from "@/lib/site-brand";
 
-const calculatorsDescription = `Browse every free online medical calculator on ${SITE_DOMAIN}: BMI, BMR, TDEE, body fat, hydration, heart rate zones, creatinine clearance, anion gap, and more.`;
-
-export const metadata: Metadata = {
-  title: "All calculators",
-  description: calculatorsDescription,
-  alternates: { canonical: "/calculators" },
-  openGraph: {
-    url: absoluteUrl("/calculators"),
-    title: `All calculators | ${SITE_DOMAIN}`,
+export async function generateMetadata(): Promise<Metadata> {
+  const total = await getCalculatorCount();
+  const calculatorsDescription = `Browse all ${total} free online medical calculators on ${SITE_DOMAIN}. Search by name; private, instant results in your browser.`;
+  const title = "All calculators";
+  const ogTitle = `${title} | ${SITE_DOMAIN}`;
+  return {
+    title,
     description: calculatorsDescription,
-  },
-};
+    alternates: { canonical: "/calculators" },
+    openGraph: {
+      url: absoluteUrl("/calculators"),
+      title: ogTitle,
+      description: calculatorsDescription,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: calculatorsDescription,
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 

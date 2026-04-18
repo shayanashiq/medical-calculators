@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getMergedSiteKeywords } from "@/lib/seo-keywords";
 import {
-  SITE_BRAND,
   SITE_DESCRIPTION,
   SITE_DOMAIN,
-  SITE_KEYWORDS,
   SITE_TITLE_DEFAULT,
   SITE_TITLE_TEMPLATE,
   SITE_URL,
@@ -21,45 +20,48 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: SITE_TITLE_DEFAULT,
-    template: SITE_TITLE_TEMPLATE,
-  },
-  description: SITE_DESCRIPTION,
-  keywords: [...SITE_KEYWORDS],
-  applicationName: SITE_TITLE_DEFAULT,
-  authors: [{ name: SITE_TITLE_DEFAULT, url: SITE_URL }],
-  creator: SITE_TITLE_DEFAULT,
-  publisher: SITE_DOMAIN,
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: SITE_URL,
-    siteName: SITE_TITLE_DEFAULT,
-    title: SITE_TITLE_DEFAULT,
+export async function generateMetadata(): Promise<Metadata> {
+  const keywords = await getMergedSiteKeywords();
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: SITE_TITLE_DEFAULT,
+      template: SITE_TITLE_TEMPLATE,
+    },
     description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE_DEFAULT,
-    description: SITE_DESCRIPTION,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    keywords,
+    applicationName: SITE_TITLE_DEFAULT,
+    authors: [{ name: SITE_TITLE_DEFAULT, url: SITE_URL }],
+    creator: SITE_TITLE_DEFAULT,
+    publisher: SITE_DOMAIN,
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: SITE_URL,
+      siteName: SITE_TITLE_DEFAULT,
+      title: SITE_TITLE_DEFAULT,
+      description: SITE_DESCRIPTION,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: SITE_TITLE_DEFAULT,
+      description: SITE_DESCRIPTION,
+    },
+    robots: {
       index: true,
       follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
     },
-  },
-};
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

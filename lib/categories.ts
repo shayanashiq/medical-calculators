@@ -32,6 +32,11 @@ export async function getAllCategories(): Promise<CalculatorCategory[]> {
   return rows.map((r) => ({ slug: r.slug, name: r.name, description: r.description }));
 }
 
+/** For SEO metadata. */
+export async function getCategoryCount(): Promise<number> {
+  return prisma.category.count();
+}
+
 export async function getCategoryBySlug(slug: string): Promise<CalculatorCategory | null> {
   const row = await prisma.category.findUnique({ where: { slug } });
   if (!row) {

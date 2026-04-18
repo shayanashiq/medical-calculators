@@ -35,6 +35,11 @@ export async function listCalculators(): Promise<CalculatorListItem[]> {
   });
 }
 
+/** For SEO copy and metadata (cheap count). */
+export async function getCalculatorCount(): Promise<number> {
+  return prisma.calculator.count();
+}
+
 export async function listShowOnHomeCalculators(): Promise<CalculatorListItem[]> {
   return prisma.calculator.findMany({
     where: { showOnHome: true },

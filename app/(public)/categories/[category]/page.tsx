@@ -29,9 +29,16 @@ export async function generateMetadata({
     category.description?.trim() ||
     `${category.name} — ${SITE_BRAND} on ${SITE_DOMAIN}. Browse calculators by category.`;
   const ogTitle = `${category.name} | ${SITE_DOMAIN}`;
+  const keywords = [
+    category.name,
+    `${category.name} calculators`,
+    `${category.name} medical calculators`,
+    SITE_BRAND,
+  ];
   return {
     title: category.name,
     description,
+    keywords,
     alternates: { canonical: path },
     openGraph: {
       url: absoluteUrl(path),

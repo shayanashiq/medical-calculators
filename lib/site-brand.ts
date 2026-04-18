@@ -22,12 +22,15 @@ export const SITE_TITLE_TEMPLATE = `%s | ${SITE_DOMAIN}`;
 /** Short mark for compact UI (admin sidebar, favicon-style badges). */
 export const SITE_MARK = "MC";
 
-/** Primary meta description (~155 chars) for root and fallbacks. */
+/** Primary meta description (~155 chars) for root layout and fallbacks — no tool names (those come from the DB on key pages). */
 export const SITE_DESCRIPTION =
-  "Free online medical calculators: BMI, BMR, TDEE, body fat, hydration, heart rate zones, creatinine clearance, anion gap & more. Private, instant results in your browser.";
+  "Free online medical calculators for clinical and wellness use. Browse tools by category; private, instant results in your browser.";
 
-/** SEO keywords (supplemental; keep focused). */
-export const SITE_KEYWORDS = [
+/**
+ * Fixed high-value phrases (always included) — merged at runtime with every calculator and category name from the database
+ * (see `getMergedSiteKeywords` in `lib/seo-keywords.ts`).
+ */
+export const SITE_KEYWORDS_BASE = [
   "medical calculators online",
   "online medical calculators",
   "clinical calculator",

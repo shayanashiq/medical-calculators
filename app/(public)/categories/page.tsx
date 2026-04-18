@@ -1,23 +1,32 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CategoriesIndexSearch } from "@/components/categories/categories-index-search";
-import { getAllCategories } from "@/lib/categories";
-import { listCalculators } from "@/lib/calculator-queries";
+import { getAllCategories, getCategoryCount } from "@/lib/categories";
+import { getCalculatorCount, listCalculators } from "@/lib/calculator-queries";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
-const categoriesDescription = `Explore ${SITE_BRAND} by topic on ${SITE_DOMAIN}: body metrics, fitness, hydration, and clinical tools.`;
-
-export const metadata: Metadata = {
-  title: "Categories",
-  description: categoriesDescription,
-  alternates: { canonical: "/categories" },
-  openGraph: {
-    url: absoluteUrl("/categories"),
-    title: `Categories | ${SITE_DOMAIN}`,
+export async function generateMetadata(): Promise<Metadata> {
+  const [calculatorCount, categoryCount] = await Promise.all([getCalculatorCount(), getCategoryCount()]);
+  const categoriesDescription = `Explore ${categoryCount} categories and ${calculatorCount} free ${SITE_BRAND} on ${SITE_DOMAIN}.`;
+  const title = "Categories";
+  const ogTitle = `${title} | ${SITE_DOMAIN}`;
+  return {
+    title,
     description: categoriesDescription,
-  },
-};
+    alternates: { canonical: "/categories" },
+    openGraph: {
+      url: absoluteUrl("/categories"),
+      title: ogTitle,
+      description: categoriesDescription,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: categoriesDescription,
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 

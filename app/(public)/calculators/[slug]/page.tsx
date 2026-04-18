@@ -11,7 +11,7 @@ import {
 } from "@/lib/calculator-queries";
 import { mergeArticleHtmlWithDetailedLimitations } from "@/lib/calculator-content-blocks";
 import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
-import { absoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl, ogImageAbsoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
 export const dynamic = "force-dynamic";
@@ -26,25 +26,37 @@ export async function generateMetadata({
   if (!calculator) {
     return { title: "Calculator" };
   }
+  const category = await getCategoryBySlug(calculator.category);
   const path = `/calculators/${slug}`;
   const description =
     calculator.description?.trim() ||
     `Free ${calculator.name} — ${SITE_BRAND} on ${SITE_DOMAIN}. Instant results in your browser.`;
   const ogTitle = `${calculator.name} | ${SITE_DOMAIN}`;
+  const keywords = [
+    calculator.name,
+    `${calculator.name} calculator`,
+    category?.name,
+    category ? `${category.name} calculators` : undefined,
+    SITE_BRAND,
+  ].filter((s): s is string => Boolean(s && s.trim()));
+  const ogImage = ogImageAbsoluteUrl(calculator.imageUrl);
   return {
     title: calculator.name,
     description,
+    keywords,
     alternates: { canonical: path },
     openGraph: {
       url: absoluteUrl(path),
       title: ogTitle,
       description,
       type: "website",
+      ...(ogImage ? { images: [{ url: ogImage, alt: calculator.name }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
       description,
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }
