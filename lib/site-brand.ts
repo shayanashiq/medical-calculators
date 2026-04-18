@@ -10,6 +10,12 @@ function getSiteUrl(): string {
 /** Full site URL for metadata, canonical, and JSON-LD. Set NEXT_PUBLIC_SITE_URL in production if the public URL differs. */
 export const SITE_URL = getSiteUrl();
 
+/**
+ * Submit this exact URL in Google Search Console → Sitemaps (and keep it in AdSense / policy checks).
+ * Served by `app/sitemap.ts` at `/sitemap.xml`.
+ */
+export const SITE_SITEMAP_URL = `${SITE_URL.replace(/\/$/, "")}/sitemap.xml`;
+
 /** Brand phrase for headings and body copy (as requested). */
 export const SITE_BRAND = "online medical calculators";
 
