@@ -50,6 +50,8 @@ model CalculatorField {
   id            String      @id @default(auto()) @map("_id") @db.ObjectId
   calculatorId  String      @db.ObjectId
   calculator    Calculator  @relation(fields: [calculatorId], references: [id], onDelete: Cascade)
+  sharedFieldId String?     @db.ObjectId
+  sharedField   SharedField? @relation(fields: [sharedFieldId], references: [id], onDelete: SetNull)
   key           String
   label         String
   fieldType     FieldType   @default(NUMBER)
@@ -65,6 +67,27 @@ model CalculatorField {
   sortOrder     Int         @default(0)
 
   @@unique([calculatorId, key])
+}
+
+/// Reusable input-field definitions for calculator forms (height, weight, sex, etc).
+model SharedField {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug         String   @unique
+  key          String
+  label        String
+  fieldType    FieldType @default(NUMBER)
+  min          Float?
+  max          Float?
+  step         Float    @default(1)
+  defaultValue Float    @default(0)
+  /// JSON: [{ "label": string, "value": number }]
+  selectOptions Json?
+  /// JSON: [{ "key": string, "label": string, "suffix"?: string, "mul": number, "add"?: number }]
+  unitOptions  Json?
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  calculatorFields CalculatorField[]
 }
 
 /// Reusable unit conversion sets for calculator number fields (same shape as CalculatorField.unitOptions).

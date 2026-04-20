@@ -23,6 +23,8 @@ export type CalculatorOutputDef = {
     max?: number;
     variant: "good" | "warning" | "severe";
     guidance?: string;
+    /** Optional extra numeric conditions keyed by input field key, e.g. { sex: 1 }. */
+    [fieldKey: string]: unknown;
   }>;
 };
 

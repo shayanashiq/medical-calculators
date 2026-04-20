@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { CalculatorAdminForm } from "@/components/admin/calculator-admin-form";
 import { getAllCategories } from "@/lib/categories";
 import { prisma } from "@/lib/prisma";
+import { getAllSharedFieldsForAdmin } from "@/lib/shared-field-queries";
 import { getAllUnitPresetsForAdmin } from "@/lib/unit-preset-queries";
 
 export const dynamic = "force-dynamic";
@@ -14,13 +15,14 @@ export default async function EditCalculatorPage({ params }: { params: Promise<{
   }
 
   const { id } = await params;
-  const [row, categoryList, unitPresets] = await Promise.all([
+  const [row, categoryList, unitPresets, sharedFields] = await Promise.all([
     prisma.calculator.findUnique({
       where: { id },
       include: { fields: { orderBy: { sortOrder: "asc" } } },
     }),
     getAllCategories(),
     getAllUnitPresetsForAdmin(),
+    getAllSharedFieldsForAdmin(),
   ]);
   if (!row) {
     notFound();
@@ -38,6 +40,7 @@ export default async function EditCalculatorPage({ params }: { params: Promise<{
             initialRow={row}
             categoryList={categoryList}
             unitPresets={unitPresets}
+            sharedFields={sharedFields}
             key={row.id}
           />
         </div>

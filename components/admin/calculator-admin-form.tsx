@@ -12,6 +12,7 @@ import {
   type ContentBlock,
 } from "@/lib/calculator-content-blocks";
 import type { CalculatorCategory } from "@/lib/categories";
+import type { SharedFieldListItem } from "@/lib/shared-field-types";
 import type { UnitPresetListItem } from "@/lib/unit-preset-types";
 
 type AdminRow = {
@@ -28,6 +29,7 @@ type AdminRow = {
   validationExpr: string | null;
   validationMessage: string | null;
   fields: {
+    sharedFieldId?: string | null;
     key: string;
     label: string;
     fieldType: FieldType;
@@ -102,6 +104,7 @@ function mapRowToForm(row: AdminRow) {
     validationExpr: row.validationExpr,
     validationMessage: row.validationMessage,
     fields: row.fields.map((f) => ({
+      sharedFieldId: f.sharedFieldId ?? null,
       key: f.key,
       label: f.label,
       fieldType: f.fieldType === "SELECT" ? ("SELECT" as const) : ("NUMBER" as const),
@@ -135,6 +138,7 @@ const defaultFormWithoutCategory = {
   outputs: [{ label: "Result", unit: "", formula: "", decimals: 1 }] as IncomingOutput[],
   fields: [
     {
+      sharedFieldId: null,
       key: "x",
       label: "X",
       fieldType: "NUMBER" as const,
@@ -165,9 +169,10 @@ type Props = {
   initialRow?: AdminRow | null;
   categoryList: CalculatorCategory[];
   unitPresets: UnitPresetListItem[];
+  sharedFields: SharedFieldListItem[];
 };
 
-export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryList, unitPresets }: Props) {
+export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryList, unitPresets, sharedFields }: Props) {
   const router = useRouter();
   const [form, setForm] = useState(() =>
     initialRow ? mapRowToForm(initialRow) : defaultFormForCategories(categoryList),
@@ -264,6 +269,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       fields: [
         ...f.fields,
         {
+          sharedFieldId: null,
           key: `field_${f.fields.length + 1}`,
           label: "New field",
           fieldType: "NUMBER",
@@ -274,6 +280,31 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           sortOrder: f.fields.length,
           selectOptions: null,
           unitOptions: null,
+        },
+      ],
+    }));
+  };
+
+  const addSharedField = (sharedFieldId: string) => {
+    const shared = sharedFields.find((s) => s.id === sharedFieldId);
+    if (!shared) return;
+    const idx = form.fields.length + 1;
+    setForm((f) => ({
+      ...f,
+      fields: [
+        ...f.fields,
+        {
+          sharedFieldId: shared.id,
+          key: shared.key || `field_${idx}`,
+          label: shared.label || `Field ${idx}`,
+          fieldType: shared.fieldType,
+          min: shared.min,
+          max: shared.max,
+          step: shared.step,
+          defaultValue: shared.defaultValue,
+          sortOrder: f.fields.length,
+          selectOptions: shared.selectOptions ? shared.selectOptions.map((o) => ({ ...o })) : null,
+          unitOptions: shared.unitOptions ? shared.unitOptions.map((o) => ({ ...o })) : null,
         },
       ],
     }));
@@ -401,6 +432,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
         ranges: o.ranges,
       })),
       fields: form.fields.map((fld, idx) => ({
+        sharedFieldId: fld.sharedFieldId ?? undefined,
         key: fld.key.trim(),
         label: fld.label.trim(),
         fieldType: fld.fieldType,
@@ -742,7 +774,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                     }}
                     rows={4}
                     className="w-full rounded-lg border border-slate-300 px-2 py-1.5 font-mono text-sm"
-                    placeholder='[{"max": 24.9, "variant": "good", "guidance": "Normal range guidance"}, {"min": 25, "max": 29.9, "variant": "warning", "guidance": "Overweight guidance"}, {"min": 30, "variant": "severe", "guidance": "Obesity guidance"}]'
+                    placeholder='[{"max": 24.9, "variant": "good", "guidance": "Normal range guidance"}, {"min": 25, "max": 29.9, "variant": "warning", "guidance": "Overweight guidance"}, {"sex": 1, "min": 1.0, "variant": "severe", "guidance": "Male high-risk guidance"}]'
                   />
                 </label>
               </div>
@@ -754,23 +786,60 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-slate-900">Input fields</h2>
-          <button type="button" onClick={addField} className="text-sm font-semibold text-sky-700 hover:text-sky-900">
-            + Add field
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs"
+              defaultValue=""
+              onChange={(e) => {
+                const id = e.target.value;
+                e.currentTarget.selectedIndex = 0;
+                if (!id) return;
+                addSharedField(id);
+              }}
+            >
+              <option value="">+ Add from saved field</option>
+              {sharedFields.map((sf) => (
+                <option key={sf.id} value={sf.id}>
+                  {sf.label}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={addField} className="text-sm font-semibold text-sky-700 hover:text-sky-900">
+              + Add field
+            </button>
+          </div>
         </div>
         <p className="mt-1 text-xs text-slate-500">
           <strong>Key</strong> must be a valid identifier and match variables in formulas. For dropdowns, choose Select and add numeric option values (e.g. Male = 1, Female = 0).
+          {" "}Manage reusable fields in{" "}
+          <Link href="/admin/shared-fields" className="font-semibold text-sky-700 hover:underline">
+            Fields
+          </Link>
+          .
         </p>
         <div className="mt-4 space-y-6">
           {form.fields.map((fld, i) => (
             <div key={i} className="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-              <div className="mb-3 flex justify-end">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                {fld.sharedFieldId ? (
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                    From saved field
+                  </span>
+                ) : (
+                  <span />
+                )}
                 {form.fields.length > 1 ? (
                   <button type="button" onClick={() => removeField(i)} className="text-xs font-semibold text-red-600">
                     Remove field
                   </button>
                 ) : null}
               </div>
+              {fld.sharedFieldId ? (
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-sm font-semibold text-slate-900">{fld.label}</p>
+                </div>
+              ) : null}
+              {fld.sharedFieldId ? null : (
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-xs font-semibold text-slate-600">Key</span>
@@ -1026,6 +1095,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                   </div>
                 )}
               </div>
+              )}
             </div>
           ))}
         </div>

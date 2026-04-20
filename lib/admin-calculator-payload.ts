@@ -5,6 +5,7 @@ import { runCalculator } from "@/lib/calculator-eval";
 
 const slugRe = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const keyRe = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+const objectIdRe = /^[a-f\d]{24}$/i;
 
 export type IncomingOutput = {
   label: string;
@@ -13,10 +14,17 @@ export type IncomingOutput = {
   guidance?: string;
   limitations?: string;
   decimals?: number;
-  ranges?: Array<{ min?: number; max?: number; variant: "good" | "warning" | "severe"; guidance?: string }>;
+  ranges?: Array<{
+    min?: number;
+    max?: number;
+    variant: "good" | "warning" | "severe";
+    guidance?: string;
+    [fieldKey: string]: unknown;
+  }>;
 };
 
 export type IncomingField = {
+  sharedFieldId?: string | null;
   key: string;
   label: string;
   fieldType: "NUMBER" | "SELECT";
@@ -89,6 +97,7 @@ function toTempFields(rows: IncomingField[]): CalculatorField[] {
   return rows.map((f, i) => ({
     id: `tmp-${i}`,
     calculatorId: "tmp",
+    sharedFieldId: null,
     key: f.key,
     label: f.label,
     fieldType: f.fieldType === "SELECT" ? FieldType.SELECT : FieldType.NUMBER,
@@ -198,7 +207,15 @@ export function validateIncomingCalculator(
         if (min == null && max == null) {
           return { ok: false, error: "Each range must have at least min or max." };
         }
-        ranges.push({ min, max, variant, guidance: rangeGuidance });
+        const rest: Record<string, number> = {};
+        for (const [k, v] of Object.entries(rr)) {
+          if (k === "min" || k === "max" || k === "variant" || k === "guidance") continue;
+          if (typeof v !== "number" || !Number.isFinite(v)) {
+            return { ok: false, error: `Range condition “${k}” must be a finite number.` };
+          }
+          rest[k] = v;
+        }
+        ranges.push({ min, max, variant, guidance: rangeGuidance, ...rest });
       }
     }
 
@@ -217,6 +234,11 @@ export function validateIncomingCalculator(
       return { ok: false, error: "Each field must be an object." };
     }
     const f = row as Record<string, unknown>;
+    const sharedFieldIdRaw = typeof f.sharedFieldId === "string" ? f.sharedFieldId.trim() : "";
+    const sharedFieldId = sharedFieldIdRaw ? sharedFieldIdRaw : null;
+    if (sharedFieldId && !objectIdRe.test(sharedFieldId)) {
+      return { ok: false, error: "Invalid sharedFieldId." };
+    }
     const key = typeof f.key === "string" ? f.key.trim() : "";
     const label = typeof f.label === "string" ? f.label.trim() : "";
     const fieldType = f.fieldType === "SELECT" || f.fieldType === "NUMBER" ? f.fieldType : null;
@@ -306,6 +328,7 @@ export function validateIncomingCalculator(
     }
 
     fields.push({
+      sharedFieldId,
       key,
       label,
       fieldType,

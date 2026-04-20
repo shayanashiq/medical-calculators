@@ -106,6 +106,22 @@ export function runCalculator(
   }
 
   try {
+    const rangeMatches = (
+      range: Record<string, unknown>,
+      value: number,
+      scope: Record<string, number>,
+    ) => {
+      const minOk = typeof range.min === "number" ? value >= range.min : true;
+      const maxOk = typeof range.max === "number" ? value <= range.max : true;
+      if (!minOk || !maxOk) return false;
+      for (const [k, v] of Object.entries(range)) {
+        if (k === "min" || k === "max" || k === "variant" || k === "guidance") continue;
+        if (typeof v !== "number" || !Number.isFinite(v)) continue;
+        if (scope[k] !== v) return false;
+      }
+      return true;
+    };
+
     const results = outputs.map((o) => {
       const rawValue = evaluateExpression(o.formula, values);
       const decimals = o.decimals ?? 1;
@@ -118,9 +134,7 @@ export function runCalculator(
       if (Array.isArray(o.ranges) && o.ranges.length > 0) {
         let matched = false;
         for (const r of o.ranges) {
-          const minOk = typeof r.min === "number" ? rounded >= r.min : true;
-          const maxOk = typeof r.max === "number" ? rounded <= r.max : true;
-          if (minOk && maxOk) {
+          if (rangeMatches(r as Record<string, unknown>, rounded, values)) {
             variant = r.variant;
             if (typeof r.guidance === "string" && r.guidance.trim()) {
               guidance = r.guidance.trim();

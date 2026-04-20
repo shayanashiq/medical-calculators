@@ -43,6 +43,16 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
 
   const { data } = parsed;
 
+  const sharedIds = Array.from(
+    new Set(data.fields.map((f) => f.sharedFieldId).filter((v): v is string => Boolean(v))),
+  );
+  if (sharedIds.length > 0) {
+    const count = await prisma.sharedField.count({ where: { id: { in: sharedIds } } });
+    if (count !== sharedIds.length) {
+      return NextResponse.json({ error: "One or more selected shared fields no longer exist." }, { status: 400 });
+    }
+  }
+
   const existing = await prisma.calculator.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -83,6 +93,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
             max: f.max,
             step: f.step,
             defaultValue: f.defaultValue,
+            sharedFieldId: f.sharedFieldId ?? null,
             sortOrder: f.sortOrder ?? idx,
             selectOptions: f.selectOptions ?? undefined,
             unitOptions: f.unitOptions ?? undefined,
