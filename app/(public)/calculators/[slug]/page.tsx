@@ -19,7 +19,13 @@ export const dynamic = "force-dynamic";
 function buildCalculatorKeywords(opts: {
   name: string;
   categoryName?: string | null;
-  seo?: { specific?: string[]; problems?: string[]; promos?: string[] } | null;
+  seo?: {
+    specific?: string[];
+    problems?: string[];
+    promos?: string[];
+    longTail?: string[];
+    contentExpansion?: string[];
+  } | null;
 }): string[] {
   const { name, categoryName, seo } = opts;
   const core = [
@@ -40,6 +46,8 @@ function buildCalculatorKeywords(opts: {
     ...(seo?.specific ?? []),
     ...(seo?.problems ?? []),
     ...(seo?.promos ?? []),
+    ...(seo?.longTail ?? []),
+    ...(seo?.contentExpansion ?? []),
   ].filter((s) => typeof s === "string" && s.trim());
   const specific = [
     name,

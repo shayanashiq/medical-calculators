@@ -57,6 +57,8 @@ export type PublicCalculator = CalculatorListItem & {
     specific?: string[];
     problems?: string[];
     promos?: string[];
+    longTail?: string[];
+    contentExpansion?: string[];
   } | null;
   contentHtml?: string | null;
   /** Long-form limitations for the article (after Clinical Significance when that section exists). */

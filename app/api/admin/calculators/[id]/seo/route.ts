@@ -19,17 +19,23 @@ function normalizeKeywordList(raw: unknown, max = 60): string[] | undefined {
   return out.length ? out : undefined;
 }
 
-function normalizeSeo(raw: unknown): { specific?: string[]; problems?: string[]; promos?: string[] } | null {
+function normalizeSeo(
+  raw: unknown,
+): { specific?: string[]; problems?: string[]; promos?: string[]; longTail?: string[]; contentExpansion?: string[] } | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   const specific = normalizeKeywordList(r.specific);
   const problems = normalizeKeywordList(r.problems);
   const promos = normalizeKeywordList(r.promos);
-  if (!specific && !problems && !promos) return null;
+  const longTail = normalizeKeywordList(r.longTail);
+  const contentExpansion = normalizeKeywordList(r.contentExpansion);
+  if (!specific && !problems && !promos && !longTail && !contentExpansion) return null;
   return {
     ...(specific ? { specific } : {}),
     ...(problems ? { problems } : {}),
     ...(promos ? { promos } : {}),
+    ...(longTail ? { longTail } : {}),
+    ...(contentExpansion ? { contentExpansion } : {}),
   };
 }
 

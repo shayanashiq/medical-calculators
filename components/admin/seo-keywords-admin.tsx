@@ -18,13 +18,23 @@ function toList(raw: unknown): string[] {
   return raw.filter((v) => typeof v === "string").map((s) => s.trim()).filter(Boolean);
 }
 
-function parseSeo(raw: unknown): { specific: string[]; problems: string[]; promos: string[] } {
-  if (!raw || typeof raw !== "object") return { specific: [], problems: [], promos: [] };
+function parseSeo(raw: unknown): {
+  specific: string[];
+  problems: string[];
+  promos: string[];
+  longTail: string[];
+  contentExpansion: string[];
+} {
+  if (!raw || typeof raw !== "object") {
+    return { specific: [], problems: [], promos: [], longTail: [], contentExpansion: [] };
+  }
   const r = raw as Record<string, unknown>;
   return {
     specific: toList(r.specific),
     problems: toList(r.problems),
     promos: toList(r.promos),
+    longTail: toList(r.longTail),
+    contentExpansion: toList(r.contentExpansion),
   };
 }
 
@@ -55,12 +65,16 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
   const [specific, setSpecific] = useState<string[]>(() => initialSeo.specific);
   const [problems, setProblems] = useState<string[]>(() => initialSeo.problems);
   const [promos, setPromos] = useState<string[]>(() => initialSeo.promos);
+  const [longTail, setLongTail] = useState<string[]>(() => initialSeo.longTail);
+  const [contentExpansion, setContentExpansion] = useState<string[]>(() => initialSeo.contentExpansion);
 
   // When selection changes, reset local state.
   useEffect(() => {
     setSpecific(initialSeo.specific);
     setProblems(initialSeo.problems);
     setPromos(initialSeo.promos);
+    setLongTail(initialSeo.longTail);
+    setContentExpansion(initialSeo.contentExpansion);
     setError(null);
     setSavedAt(null);
   }, [selectedId]);
@@ -74,7 +88,7 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
       const res = await fetch(`/api/admin/calculators/${selected.id}/seo`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seo: { specific, problems, promos } }),
+        body: JSON.stringify({ seo: { specific, problems, promos, longTail, contentExpansion } }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -184,6 +198,20 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
           value={promos}
           onChange={setPromos}
           placeholder="e.g. free clinical calculators for students"
+        />
+        <KeywordChipsInput
+          label="Long-tail SEO keywords"
+          hint="More specific phrases (lower competition)."
+          value={longTail}
+          onChange={setLongTail}
+          placeholder="e.g. bmi calculator kg and cm"
+        />
+        <KeywordChipsInput
+          label="Content expansion keywords"
+          hint="Supporting context terms for your article copy."
+          value={contentExpansion}
+          onChange={setContentExpansion}
+          placeholder="e.g. bmi categories, interpretation table, healthy range"
         />
 
         <div className="flex flex-wrap items-center gap-3">
