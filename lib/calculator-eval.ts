@@ -76,7 +76,7 @@ export function normalizeFieldValues(
 }
 
 export function runCalculator(
-  calculator: Pick<Calculator, "outputs" | "validationExpr" | "validationMessage">,
+  calculator: Pick<Calculator, "validationExpr" | "validationMessage"> & { outputs: unknown },
   fields: CalculatorField[],
   raw: Record<string, unknown>,
 ):

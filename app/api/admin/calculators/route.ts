@@ -1,4 +1,4 @@
-import { FieldType } from "@prisma/client";
+import { FieldType, type Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { validateIncomingCalculator } from "@/lib/admin-calculator-payload";
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       contentHtml: data.contentHtml ?? null,
       limitationsDetailed: data.limitationsDetailed ?? null,
       showOnHome: data.showOnHome,
-      outputs: data.outputs,
+      outputs: data.outputs as Prisma.InputJsonValue,
       validationExpr: data.validationExpr,
       validationMessage: data.validationMessage,
       fields: {

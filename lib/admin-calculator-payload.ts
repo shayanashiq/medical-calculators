@@ -1,6 +1,5 @@
 import type { CalculatorField } from "@prisma/client";
 import { FieldType } from "@prisma/client";
-import type { CalculatorOutputDef } from "@/lib/calculator-types";
 import { runCalculator } from "@/lib/calculator-eval";
 
 const slugRe = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -380,7 +379,7 @@ export function validateIncomingCalculator(
 
   const dry = runCalculator(
     {
-      outputs: outputs as CalculatorOutputDef[],
+      outputs,
       validationExpr,
       validationMessage,
     },
