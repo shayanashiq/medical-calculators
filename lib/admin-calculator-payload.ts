@@ -361,7 +361,8 @@ export function validateIncomingCalculator(
         seenUnitKeys.add(uKey);
         unitOptions.push({ key: uKey, label: uLabel, suffix, mul, add, min, max });
       }
-      if (unitOptions.length < 2) {
+      // Allow a single unit option (no conversion / switching).
+      if (unitOptions.length < 1) {
         unitOptions = null;
       }
     }

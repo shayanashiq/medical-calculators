@@ -939,7 +939,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                             return;
                           }
                           const preset = unitPresets.find((p) => p.id === id);
-                          if (!preset || preset.options.length < 2) {
+                          if (!preset || preset.options.length < 1) {
                             return;
                           }
                           setError(null);
@@ -967,7 +967,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                         </button>
                       </div>
                       <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
-                        Set conversion and per-unit limits. Stored formula value is{" "}
+                        Set unit settings and optional conversion. Stored formula value is{" "}
                         <code className="rounded bg-slate-100 px-1">{"(x + add) * mul"}</code>.
                       </p>
                       <div className="space-y-2">
