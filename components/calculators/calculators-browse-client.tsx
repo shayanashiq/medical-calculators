@@ -99,7 +99,7 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900">All calculators</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900">All medical calculators</h1>
           <p className="mt-1 text-sm text-slate-500">
             {loading ? (
               "Searching…"

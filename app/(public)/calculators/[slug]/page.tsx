@@ -16,6 +16,38 @@ import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
 export const dynamic = "force-dynamic";
 
+function buildCalculatorKeywords(opts: { name: string; categoryName?: string | null }): string[] {
+  const { name, categoryName } = opts;
+  const core = [
+    // Core generic keywords
+    "medical calculator",
+    "health calculator",
+    "clinical calculator",
+    "health assessment tools",
+    "online medical tools",
+    "medical calculation tools",
+    // Intent-based / long-tail variants
+    "free online health calculators",
+    "medical calculators free",
+    "calculate health metrics online",
+    "medical calculator tools for doctors and students",
+  ];
+  const specific = [
+    name,
+    `${name} calculator`,
+    `${name} medical calculator`,
+    `${name} clinical calculator`,
+    categoryName ?? undefined,
+    categoryName ? `${categoryName} calculator` : undefined,
+    categoryName ? `${categoryName} calculators` : undefined,
+    SITE_BRAND,
+    SITE_DOMAIN,
+  ].filter((s): s is string => Boolean(s && s.trim()));
+
+  // Keep it tight to avoid keyword stuffing.
+  return Array.from(new Set([...specific, ...core]));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -32,13 +64,7 @@ export async function generateMetadata({
     calculator.description?.trim() ||
     `Free ${calculator.name} — ${SITE_BRAND} on ${SITE_DOMAIN}. Instant results in your browser.`;
   const ogTitle = `${calculator.name} | ${SITE_DOMAIN}`;
-  const keywords = [
-    calculator.name,
-    `${calculator.name} calculator`,
-    category?.name,
-    category ? `${category.name} calculators` : undefined,
-    SITE_BRAND,
-  ].filter((s): s is string => Boolean(s && s.trim()));
+  const keywords = buildCalculatorKeywords({ name: calculator.name, categoryName: category?.name });
   const ogImage = ogImageAbsoluteUrl(calculator.imageUrl);
   return {
     title: calculator.name,
@@ -81,8 +107,36 @@ export default async function CalculatorPage({
     calculator.limitationsDetailed,
   );
 
+  const path = `/calculators/${calculator.slug}`;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Calculators", item: absoluteUrl("/calculators") },
+      ...(category?.name
+        ? [{ "@type": "ListItem", position: 3, name: category.name, item: absoluteUrl(`/categories/${calculator.category}`) }]
+        : []),
+      { "@type": "ListItem", position: category?.name ? 4 : 3, name: calculator.name, item: absoluteUrl(path) },
+    ],
+  };
+  const toolJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: `${calculator.name} Calculator`,
+    applicationCategory: "HealthApplication",
+    operatingSystem: "Web",
+    url: absoluteUrl(path),
+    description: calculator.description?.trim() || `${calculator.name} calculator with instant results.`,
+  };
+
   return (
     <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolJsonLd) }} />
       <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <Link href="/" className="font-semibold text-sky-700 hover:text-sky-800">
           Home
