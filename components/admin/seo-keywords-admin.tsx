@@ -39,6 +39,7 @@ function parseSeo(raw: unknown): {
 }
 
 export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
+  const [rows, setRows] = useState<Row[]>(() => calculators);
   const [q, setQ] = useState("");
   const [selectedId, setSelectedId] = useState<string>(() => calculators[0]?.id ?? "");
   const [saving, setSaving] = useState(false);
@@ -47,19 +48,19 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return calculators;
-    return calculators.filter((c) => {
+    if (!term) return rows;
+    return rows.filter((c) => {
       return (
         c.name.toLowerCase().includes(term) ||
         c.slug.toLowerCase().includes(term) ||
         c.category.toLowerCase().includes(term)
       );
     });
-  }, [calculators, q]);
+  }, [rows, q]);
 
   const selected = useMemo(() => {
-    return calculators.find((c) => c.id === selectedId) ?? filtered[0] ?? calculators[0] ?? null;
-  }, [calculators, filtered, selectedId]);
+    return rows.find((c) => c.id === selectedId) ?? filtered[0] ?? rows[0] ?? null;
+  }, [filtered, rows, selectedId]);
 
   const initialSeo = useMemo(() => parseSeo(selected?.seo), [selected?.seo]);
   const [specific, setSpecific] = useState<string[]>(() => initialSeo.specific);
@@ -85,16 +86,29 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
     setError(null);
     setSavedAt(null);
     try {
+      const seo = { specific, problems, promos, longTail, contentExpansion };
       const res = await fetch(`/api/admin/calculators/${selected.id}/seo`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seo: { specific, problems, promos, longTail, contentExpansion } }),
+        body: JSON.stringify({ seo }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Save failed.");
         return;
       }
+      // Keep UI in sync without needing a full refresh/navigation.
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === selected.id
+            ? {
+                ...r,
+                seo,
+                updatedAt: new Date().toISOString(),
+              }
+            : r,
+        ),
+      );
       setSavedAt(new Date().toLocaleString());
     } finally {
       setSaving(false);
