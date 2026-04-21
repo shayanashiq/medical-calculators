@@ -30,8 +30,8 @@ export function validateIncomingUnitPreset(body: unknown): { ok: true; data: Inc
   if (!Array.isArray(b.options)) {
     return { ok: false, error: "Options must be an array." };
   }
-  if (b.options.length < 2) {
-    return { ok: false, error: "Add at least two units (e.g. cm and in)." };
+  if (b.options.length < 1) {
+    return { ok: false, error: "Add at least one unit." };
   }
 
   const options: UnitPresetOption[] = [];

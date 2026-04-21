@@ -19,10 +19,7 @@ export function UnitPresetAdminForm({ mode, presetId, initial }: Props) {
   const [options, setOptions] = useState<UnitPresetOption[]>(
     initial?.options?.length
       ? initial.options
-      : [
-          { key: "cm", label: "Centimeters", suffix: "cm", mul: 1 },
-          { key: "in", label: "Inches", suffix: "in", mul: 2.54 },
-        ],
+      : [{ key: "unit", label: "Unit", suffix: "", mul: 1 }],
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -122,7 +119,8 @@ export function UnitPresetAdminForm({ mode, presetId, initial }: Props) {
               Stored value in formulas is <code className="rounded bg-slate-100 px-1">(what the user types + add) × mul</code>.
               Pick one reference unit (often <code className="rounded bg-slate-100 px-1">mul = 1</code>). For another unit, set{" "}
               <code className="rounded bg-slate-100 px-1">mul</code> to how many reference units correspond to{" "}
-              <strong>one</strong> displayed unit (example: 1 inch = 2.54 cm → mul 2.54 when cm is the reference).
+              <strong>one</strong> displayed unit (example: 1 inch = 2.54 cm → mul 2.54 when cm is the reference). One unit is
+              also valid if you do not need conversion.
             </p>
           </div>
           <button type="button" onClick={addOption} className="text-sm font-semibold text-sky-700 hover:text-sky-900">
@@ -213,7 +211,7 @@ export function UnitPresetAdminForm({ mode, presetId, initial }: Props) {
                 />
               </label>
               <div className="flex justify-end sm:col-span-2">
-                {options.length > 2 ? (
+                {options.length > 1 ? (
                   <button
                     type="button"
                     onClick={() => removeOption(i)}
