@@ -76,6 +76,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         formulaPlain: data.formulaPlain,
         category: data.category,
         imageUrl: data.imageUrl,
+        seo: (data.seo ?? null) as Prisma.InputJsonValue,
         contentHtml: data.contentHtml ?? null,
         ...(data.limitationsDetailed !== undefined
           ? { limitationsDetailed: data.limitationsDetailed }

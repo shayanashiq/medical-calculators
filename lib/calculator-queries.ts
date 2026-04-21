@@ -128,6 +128,11 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     unitOptions: (f.unitOptions as PublicField["unitOptions"]) ?? null,
   }));
   const outputs = (Array.isArray(row.outputs) ? row.outputs : []) as CalculatorOutputDef[];
+  const seoRaw = row.seo as unknown;
+  const seo =
+    seoRaw && typeof seoRaw === "object"
+      ? (seoRaw as PublicCalculator["seo"])
+      : null;
 
   return {
     slug: row.slug,
@@ -139,6 +144,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     showOnHome: row.showOnHome,
     fields,
     outputs,
+    seo,
     contentHtml: row.contentHtml ?? null,
     limitationsDetailed: row.limitationsDetailed ?? null,
   };

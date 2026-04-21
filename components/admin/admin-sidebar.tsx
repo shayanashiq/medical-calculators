@@ -56,6 +56,20 @@ export function AdminSidebar() {
             </Link>
           );
         })}
+
+        <div className="my-2 hidden border-t border-slate-800 lg:block" />
+        <div className="hidden px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:block">
+          SEO
+        </div>
+        <Link
+          href="/admin/seo"
+          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-900 hover:text-slate-100 lg:px-3"
+        >
+          <span className="text-base opacity-80" aria-hidden>
+            ⌁
+          </span>
+          Calculator keywords
+        </Link>
         <Link
           href="/"
           className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-900 hover:text-slate-300 lg:mt-2"

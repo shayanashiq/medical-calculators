@@ -16,8 +16,12 @@ import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
 export const dynamic = "force-dynamic";
 
-function buildCalculatorKeywords(opts: { name: string; categoryName?: string | null }): string[] {
-  const { name, categoryName } = opts;
+function buildCalculatorKeywords(opts: {
+  name: string;
+  categoryName?: string | null;
+  seo?: { specific?: string[]; problems?: string[]; promos?: string[] } | null;
+}): string[] {
+  const { name, categoryName, seo } = opts;
   const core = [
     // Core generic keywords
     "medical calculator",
@@ -32,6 +36,11 @@ function buildCalculatorKeywords(opts: { name: string; categoryName?: string | n
     "calculate health metrics online",
     "medical calculator tools for doctors and students",
   ];
+  const admin = [
+    ...(seo?.specific ?? []),
+    ...(seo?.problems ?? []),
+    ...(seo?.promos ?? []),
+  ].filter((s) => typeof s === "string" && s.trim());
   const specific = [
     name,
     `${name} calculator`,
@@ -45,7 +54,7 @@ function buildCalculatorKeywords(opts: { name: string; categoryName?: string | n
   ].filter((s): s is string => Boolean(s && s.trim()));
 
   // Keep it tight to avoid keyword stuffing.
-  return Array.from(new Set([...specific, ...core]));
+  return Array.from(new Set([...specific, ...admin, ...core]));
 }
 
 export async function generateMetadata({
@@ -64,7 +73,7 @@ export async function generateMetadata({
     calculator.description?.trim() ||
     `Free ${calculator.name} — ${SITE_BRAND} on ${SITE_DOMAIN}. Instant results in your browser.`;
   const ogTitle = `${calculator.name} | ${SITE_DOMAIN}`;
-  const keywords = buildCalculatorKeywords({ name: calculator.name, categoryName: category?.name });
+  const keywords = buildCalculatorKeywords({ name: calculator.name, categoryName: category?.name, seo: calculator.seo });
   const ogImage = ogImageAbsoluteUrl(calculator.imageUrl);
   return {
     title: calculator.name,

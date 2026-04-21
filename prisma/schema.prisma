@@ -31,6 +31,8 @@ model Calculator {
   category          String
   /// Optional card image: HTTPS URL or site path e.g. /calculator-images/abc.jpg
   imageUrl          String?
+  /// Optional SEO keywords for this calculator (JSON object; edited in admin).
+  seo               Json?
   /// Optional admin-authored HTML content shown on the calculator page.
   contentHtml       String?
   /// Longer limitations copy for the article area (inserted after Clinical Significance when present).

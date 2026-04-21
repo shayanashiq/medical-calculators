@@ -52,6 +52,12 @@ export type PublicCalculator = CalculatorListItem & {
   fields: PublicField[];
   /** Output definitions (formulas, ranges for indicator) — same order as calculate API results. */
   outputs: CalculatorOutputDef[];
+  /** Optional SEO keyword sets (admin-managed). */
+  seo?: {
+    specific?: string[];
+    problems?: string[];
+    promos?: string[];
+  } | null;
   contentHtml?: string | null;
   /** Long-form limitations for the article (after Clinical Significance when that section exists). */
   limitationsDetailed?: string | null;

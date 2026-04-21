@@ -51,6 +51,11 @@ export type IncomingCalculatorBody = {
   formulaPlain: string;
   category: string;
   imageUrl: string | null;
+  seo?: {
+    specific?: string[];
+    problems?: string[];
+    promos?: string[];
+  } | null;
   contentHtml?: string | null;
   limitationsDetailed?: string | null;
   showOnHome: boolean;
@@ -59,6 +64,39 @@ export type IncomingCalculatorBody = {
   validationExpr?: string | null;
   validationMessage?: string | null;
 };
+
+function normalizeKeywordList(raw: unknown, max = 60): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const v of raw) {
+    if (typeof v !== "string") continue;
+    const t = v.trim();
+    if (!t) continue;
+    const k = t.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(t);
+    if (out.length >= max) break;
+  }
+  return out.length ? out : undefined;
+}
+
+function normalizeSeo(raw: unknown): IncomingCalculatorBody["seo"] {
+  if (raw === undefined) return undefined;
+  if (raw == null) return null;
+  if (typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const specific = normalizeKeywordList(r.specific);
+  const problems = normalizeKeywordList(r.problems);
+  const promos = normalizeKeywordList(r.promos);
+  if (!specific && !problems && !promos) return null;
+  return {
+    ...(specific ? { specific } : {}),
+    ...(problems ? { problems } : {}),
+    ...(promos ? { promos } : {}),
+  };
+}
 
 /** Accepts https?:// URLs or same-origin paths like /calculator-images/…. */
 export function normalizeImageUrl(raw: unknown): string | null {
@@ -148,6 +186,8 @@ export function validateIncomingCalculator(
       error: "Image URL must be empty, a valid http(s) link, or a path starting with / (e.g. /calculator-images/…).",
     };
   }
+
+  const seo = normalizeSeo(b.seo);
 
   const contentHtmlRaw = typeof b.contentHtml === "string" ? b.contentHtml : null;
   const contentHtml = contentHtmlRaw?.trim() ? contentHtmlRaw : null;
@@ -360,6 +400,7 @@ export function validateIncomingCalculator(
     formulaPlain,
     category,
     imageUrl,
+    seo,
     contentHtml,
     showOnHome,
     outputs,

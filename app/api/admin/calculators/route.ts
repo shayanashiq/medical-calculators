@@ -62,6 +62,7 @@ export async function POST(req: Request) {
       formulaPlain: data.formulaPlain,
       category: data.category,
       imageUrl: data.imageUrl,
+      seo: (data.seo ?? null) as Prisma.InputJsonValue,
       contentHtml: data.contentHtml ?? null,
       limitationsDetailed: data.limitationsDetailed ?? null,
       showOnHome: data.showOnHome,
