@@ -24,7 +24,7 @@ export async function SiteFooter() {
                 className="h-10 w-auto"
               />
               <div className="min-w-0">
-                <p className="text-sm font-bold tracking-tight text-slate-900">{SITE_TITLE_DEFAULT}</p>
+                <p className="text-md font-bold tracking-tight text-slate-900">{SITE_TITLE_DEFAULT}</p>
                 <p className="mt-0.5 text-xs font-semibold text-slate-500">{SITE_DOMAIN}</p>
               </div>
             </div>

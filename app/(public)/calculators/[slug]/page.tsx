@@ -148,7 +148,7 @@ export default async function CalculatorPage({
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl bg-white px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-7xl bg-white px-4 py-10 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

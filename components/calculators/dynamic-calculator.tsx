@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PublicCalculator } from "@/lib/calculator-types";
 import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/components/calculators/form-controls";
+import { SiteSearchBar } from "@/components/ui/site-search-bar";
 import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
 import type { CalculatorResultRow } from "@/lib/public-calculator-eval";
 
@@ -28,19 +30,6 @@ function withDynamicUnitLabel(label: string, unitText?: string) {
   return `${cleaned} (${unitText.trim()})`;
 }
 
-function variantBubbleClass(variant: "good" | "warning" | "severe" | "neutral" | undefined) {
-  if (variant === "severe") {
-    return "border-red-200 bg-red-500 text-white";
-  }
-  if (variant === "warning") {
-    return "border-amber-200 bg-amber-500 text-white";
-  }
-  if (variant === "good") {
-    return "border-emerald-200 bg-emerald-500 text-white";
-  }
-  return "border-slate-200 bg-white text-slate-800";
-}
-
 function numberFieldsWithinLimits(calc: PublicCalculator, vals: Record<string, number>): boolean {
   for (const f of calc.fields) {
     if (f.fieldType !== "NUMBER") {
@@ -60,6 +49,7 @@ function numberFieldsWithinLimits(calc: PublicCalculator, vals: Record<string, n
 }
 
 export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
+  const router = useRouter();
   const initial = useMemo(() => {
     const v: Record<string, number> = {};
     for (const f of calculator.fields) {
@@ -177,18 +167,26 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
     return m;
   }, [calculator.outputs]);
 
-  const primaryResult = useMemo(() => rangedResults[0] ?? results?.[0] ?? null, [rangedResults, results]);
-  const hasSideContent = Boolean(primaryResult?.guidance || primaryResult?.limitations);
-
   const shouldShowIndicatorOnly = rangedResults.length > 0;
+
+  const [searchQ, setSearchQ] = useState("");
+  const submitSearch = useCallback(() => {
+    const term = searchQ.trim();
+    const params = new URLSearchParams();
+    if (term) {
+      params.set("q", term);
+    }
+    const qs = params.toString();
+    router.push(`/calculators${qs ? `?${qs}` : ""}`);
+  }, [router, searchQ]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1.1fr)] lg:items-start">
-      <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 p-5 sm:p-6">
+      <div className="rounded-md border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 p-5 sm:p-6">
           <div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Patient parameters</h2>
+              <h2 className="text-lg font-bold text-slate-900">Patient parameters</h2>
               <p className="text-xs text-slate-500">Adjust values, then click Calculate.</p>
             </div>
           </div>
@@ -324,7 +322,6 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
                     <ResultBox key={`${r.label}-${idx}`} variant={r.variant ?? "neutral"}>
                       {r.label}: {r.value}
                       {r.unit ? ` ${r.unit}` : ""}
-                      {r.guidance ? <span className="mt-2 block text-sm font-normal">{r.guidance}</span> : null}
                     </ResultBox>
                   ))}
                 </div>
@@ -343,32 +340,23 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
         </div>
       </div>
       <aside className="space-y-4 lg:sticky lg:top-4">
-        {hasSideContent ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-bold text-slate-900">Result guidance</p>
-              {primaryResult?.variant ? (
-                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${variantBubbleClass(primaryResult.variant)}`}>
-                  {primaryResult.variant}
-                </span>
-              ) : null}
-            </div>
-
-            {primaryResult?.guidance ? (
-              <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Health guidance</p>
-                <p className="mt-2 text-sm text-slate-700">{primaryResult.guidance}</p>
-              </div>
-            ) : null}
-
-            {primaryResult?.limitations ? (
-              <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Limitations</p>
-                <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{primaryResult.limitations}</p>
-              </div>
-            ) : null}
+        <div className="rounded-md border border-slate-200 bg-white p-4">
+          <p className="text-lg font-bold text-slate-900">Search calculators</p>
+          <p className="mt-1 text-xs text-slate-500">Jump to another calculator without leaving this page.</p>
+          <div className="mt-3">
+            <SiteSearchBar
+              variant="surface"
+              align="left"
+              value={searchQ}
+              onChange={setSearchQ}
+              onSubmit={submitSearch}
+              placeholder="Search calculators…"
+              className="max-w-none"
+              inputId={`calculator-side-search-${calculator.slug}`}
+              buttonLabel="Go"
+            />
           </div>
-        ) : null}
+        </div>
       </aside>
 
     </div>
