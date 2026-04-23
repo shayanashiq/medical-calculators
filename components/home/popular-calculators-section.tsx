@@ -17,7 +17,7 @@ export function PopularCalculatorsSection({ calculators, totalCount }: Props) {
         <p className="mx-auto mt-3 max-w-2xl text-center text-base text-slate-500">
           {totalCount === 0
             ? "Browse the catalog once calculators are added."
-            : `Showing ${totalCount} calculators selected for the home page.`}
+            : `A quick look at ${calculators.length} of ${totalCount} tools. Open any card for instant results.`}
         </p>
         <div className="mt-3 flex justify-center">
           <Link
@@ -41,7 +41,7 @@ export function PopularCalculatorsSection({ calculators, totalCount }: Props) {
           </p>
         ) : (
           <div className="mt-10 grid justify-items-center gap-5 sm:grid-cols-2 sm:justify-items-stretch lg:grid-cols-3 xl:grid-cols-4">
-            {calculators.map((item, idx) => (
+            {calculators.map((item) => (
               <div key={item.slug} className="w-full max-w-[22rem] sm:max-w-none">
                 <CalculatorTileCard calculator={item} />
               </div>

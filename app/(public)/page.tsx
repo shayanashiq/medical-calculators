@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import { BrowseByCategorySection } from "@/components/home/browse-by-category-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { PopularCalculatorsSection } from "@/components/home/popular-calculators-section";
-import {
-  getCalculatorCount,
-  listCalculators,
-  listShowOnHomeCalculators,
-} from "@/lib/calculator-queries";
+import { getCalculatorCount, listCalculators } from "@/lib/calculator-queries";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_TITLE_DEFAULT } from "@/lib/site-brand";
 
@@ -31,9 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const dynamic = "force-dynamic";
+const POPULAR_LIMIT = 12;
 
 export default async function Home() {
-  const [all, popular] = await Promise.all([listCalculators(), listShowOnHomeCalculators()]);
+  const all = await listCalculators();
+  const popular = all.slice(0, POPULAR_LIMIT);
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -56,7 +54,7 @@ export default async function Home() {
       />
       <HeroSection />
       <BrowseByCategorySection />
-      <PopularCalculatorsSection calculators={popular} totalCount={popular.length} />
+      <PopularCalculatorsSection calculators={popular} totalCount={all.length} />
       {/* <HomeInfoStrip /> */}
     </main>
   );
