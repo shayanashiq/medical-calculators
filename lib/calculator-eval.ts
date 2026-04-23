@@ -129,16 +129,11 @@ export function runCalculator(
       const rounded = Math.round(rawValue * factor) / factor;
 
       let variant: "good" | "warning" | "severe" | "neutral" = "neutral";
-      let guidance = typeof o.guidance === "string" && o.guidance.trim() ? o.guidance.trim() : undefined;
-      const limitations = typeof o.limitations === "string" && o.limitations.trim() ? o.limitations.trim() : undefined;
       if (Array.isArray(o.ranges) && o.ranges.length > 0) {
         let matched = false;
         for (const r of o.ranges) {
           if (rangeMatches(r as Record<string, unknown>, rounded, values)) {
             variant = r.variant;
-            if (typeof r.guidance === "string" && r.guidance.trim()) {
-              guidance = r.guidance.trim();
-            }
             matched = true;
             break;
           }
@@ -148,7 +143,7 @@ export function runCalculator(
         }
       }
 
-      return { label: o.label, unit: o.unit, value: rounded, variant, guidance, limitations };
+      return { label: o.label, unit: o.unit, value: rounded, variant };
     });
     return { ok: true, results };
   } catch (e) {

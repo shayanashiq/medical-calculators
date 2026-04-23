@@ -34,22 +34,47 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
   const { data } = parsed;
+  if (data.unitPresetId) {
+    const exists = await prisma.unitPreset.count({ where: { id: data.unitPresetId } });
+    if (!exists) {
+      return NextResponse.json({ error: "Selected unit preset no longer exists." }, { status: 400 });
+    }
+  }
   try {
-    const row = await prisma.sharedField.update({
-      where: { id },
-      data: {
-        slug: data.slug,
-        key: data.key,
-        label: data.label,
-        fieldType: data.fieldType === "SELECT" ? FieldType.SELECT : FieldType.NUMBER,
-        min: data.min,
-        max: data.max,
-        step: data.step,
-        defaultValue: data.defaultValue,
-        selectOptions: data.selectOptions ?? undefined,
-        unitOptions: data.unitOptions ?? undefined,
-        description: data.description,
-      },
+    const row = await prisma.$transaction(async (tx) => {
+      const updated = await tx.sharedField.update({
+        where: { id },
+        data: {
+          slug: data.slug,
+          key: data.key,
+          label: data.label,
+          fieldType: data.fieldType === "SELECT" ? FieldType.SELECT : FieldType.NUMBER,
+          min: data.min,
+          max: data.max,
+          step: data.step,
+          defaultValue: data.defaultValue,
+          selectOptions: data.selectOptions ?? undefined,
+          unitOptions: data.unitOptions ?? undefined,
+          unitPresetId: data.unitPresetId ?? null,
+          description: data.description,
+        },
+      });
+      await tx.calculatorField.updateMany({
+        where: { sharedFieldId: id },
+        data: {
+          key: data.key,
+          label: data.label,
+          fieldType: data.fieldType === "SELECT" ? FieldType.SELECT : FieldType.NUMBER,
+          min: data.min,
+          max: data.max,
+          step: data.step,
+          defaultValue: data.defaultValue,
+          selectOptions: data.selectOptions ?? undefined,
+          unitOptions: data.unitOptions ?? undefined,
+          unitPresetId: data.unitPresetId ?? null,
+        },
+      });
+      return updated;
     });
     return NextResponse.json(row);
   } catch {

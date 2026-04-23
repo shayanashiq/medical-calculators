@@ -52,6 +52,15 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       return NextResponse.json({ error: "One or more selected shared fields no longer exist." }, { status: 400 });
     }
   }
+  const unitPresetIds = Array.from(
+    new Set(data.fields.map((f) => f.unitPresetId).filter((v): v is string => Boolean(v))),
+  );
+  if (unitPresetIds.length > 0) {
+    const count = await prisma.unitPreset.count({ where: { id: { in: unitPresetIds } } });
+    if (count !== unitPresetIds.length) {
+      return NextResponse.json({ error: "One or more selected unit presets no longer exist." }, { status: 400 });
+    }
+  }
 
   const existing = await prisma.calculator.findUnique({ where: { id } });
   if (!existing) {
@@ -75,7 +84,6 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         description: data.description,
         formulaPlain: data.formulaPlain,
         category: data.category,
-        imageUrl: data.imageUrl,
         contentHtml: data.contentHtml ?? null,
         ...(data.limitationsDetailed !== undefined
           ? { limitationsDetailed: data.limitationsDetailed }
@@ -94,6 +102,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
             step: f.step,
             defaultValue: f.defaultValue,
             sharedFieldId: f.sharedFieldId ?? null,
+            unitPresetId: f.unitPresetId ?? null,
             sortOrder: f.sortOrder ?? idx,
             selectOptions: f.selectOptions ?? undefined,
             unitOptions: f.unitOptions ?? undefined,

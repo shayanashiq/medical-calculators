@@ -54,6 +54,7 @@ export async function getAllSharedFieldsForAdmin(): Promise<SharedFieldListItem[
     defaultValue: r.defaultValue,
     selectOptions: parseSelectOptionsFromJson(r.selectOptions),
     unitOptions: parseUnitOptionsFromJson(r.unitOptions),
+    unitPresetId: r.unitPresetId ?? null,
     description: r.description,
   }));
 }

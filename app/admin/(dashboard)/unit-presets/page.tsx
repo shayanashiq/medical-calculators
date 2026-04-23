@@ -2,17 +2,45 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DeleteUnitPresetButton } from "@/components/admin/delete-unit-preset-button";
+import { PaginationBar } from "@/components/ui/pagination-bar";
+import { CALCULATORS_PAGE_SIZE, parsePageParam, totalPages } from "@/lib/list-pagination";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function UnitPresetsAdminPage() {
+export default async function UnitPresetsAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) {
     redirect("/admin/login");
   }
 
-  const rows = await prisma.unitPreset.findMany({ orderBy: { name: "asc" } });
+  const sp = await searchParams;
+  const page = parsePageParam(sp.page);
+  const qRaw = typeof sp.q === "string" ? sp.q : "";
+  const q = qRaw.trim();
+  const where = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { slug: { contains: q, mode: "insensitive" as const } },
+          { description: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+  const total = await prisma.unitPreset.count({ where });
+  const pages = totalPages(total, CALCULATORS_PAGE_SIZE);
+  const safePage = Math.min(page, pages);
+  const skip = (safePage - 1) * CALCULATORS_PAGE_SIZE;
+  const rows = await prisma.unitPreset.findMany({
+    where,
+    orderBy: { name: "asc" },
+    skip,
+    take: CALCULATORS_PAGE_SIZE,
+  });
 
   return (
     <div className="p-6 lg:p-10">
@@ -32,6 +60,15 @@ export default async function UnitPresetsAdminPage() {
             New preset
           </Link>
         </div>
+        <form className="mt-4">
+          <input
+            type="search"
+            name="q"
+            defaultValue={qRaw}
+            placeholder="Search presets..."
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
+          />
+        </form>
 
         <ul className="mt-8 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
           {rows.length === 0 ? (
@@ -54,6 +91,12 @@ export default async function UnitPresetsAdminPage() {
             ))
           )}
         </ul>
+        <PaginationBar
+          page={safePage}
+          totalPages={pages}
+          basePath="/admin/unit-presets"
+          query={q ? { q } : undefined}
+        />
       </div>
     </div>
   );

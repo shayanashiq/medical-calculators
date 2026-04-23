@@ -17,7 +17,7 @@ export function PopularCalculatorsSection({ calculators, totalCount }: Props) {
         <p className="mx-auto mt-3 max-w-2xl text-center text-base text-slate-500">
           {totalCount === 0
             ? "Browse the catalog once calculators are added."
-            : `A quick look at ${calculators.length} of ${totalCount} tools. Open any card for instant results.`}
+            : `Showing ${totalCount} calculators selected for the home page.`}
         </p>
         <div className="mt-3 flex justify-center">
           <Link

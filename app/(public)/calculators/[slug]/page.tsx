@@ -11,7 +11,7 @@ import {
 } from "@/lib/calculator-queries";
 import { mergeArticleHtmlWithDetailedLimitations } from "@/lib/calculator-content-blocks";
 import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
-import { absoluteUrl, ogImageAbsoluteUrl } from "@/lib/absolute-url";
+import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +82,6 @@ export async function generateMetadata({
     `Free ${calculator.name} — ${SITE_BRAND} on ${SITE_DOMAIN}. Instant results in your browser.`;
   const ogTitle = `${calculator.name} | ${SITE_DOMAIN}`;
   const keywords = buildCalculatorKeywords({ name: calculator.name, categoryName: category?.name, seo: calculator.seo });
-  const ogImage = ogImageAbsoluteUrl(calculator.imageUrl);
   return {
     title: calculator.name,
     description,
@@ -93,13 +92,11 @@ export async function generateMetadata({
       title: ogTitle,
       description,
       type: "website",
-      ...(ogImage ? { images: [{ url: ogImage, alt: calculator.name }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
       description,
-      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }
@@ -168,18 +165,6 @@ export default async function CalculatorPage({
       </div>
 
       <header className="mb-6 flex flex-col gap-3 sm:mb-8">
-        {calculator.imageUrl?.trim() ? (
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200">
-            <div className="aspect-[2.2/1] max-h-56 w-full">
-              <img
-                src={calculator.imageUrl.trim()}
-                alt={calculator.name}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </div>
-        ) : null}
-
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="section-title text-3xl font-bold text-slate-900 sm:text-4xl">{calculator.name}</h1>

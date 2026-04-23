@@ -10,8 +10,6 @@ export type IncomingOutput = {
   label: string;
   unit: string;
   formula: string;
-  guidance?: string;
-  limitations?: string;
   decimals?: number;
   ranges?: Array<{
     min?: number;
@@ -42,6 +40,7 @@ export type IncomingField = {
     min?: number;
     max?: number;
   }> | null;
+  unitPresetId?: string | null;
 };
 
 export type IncomingCalculatorBody = {
@@ -50,7 +49,6 @@ export type IncomingCalculatorBody = {
   description: string;
   formulaPlain: string;
   category: string;
-  imageUrl: string | null;
   seo?: {
     specific?: string[];
     problems?: string[];
@@ -98,38 +96,6 @@ function normalizeSeo(raw: unknown): IncomingCalculatorBody["seo"] {
   };
 }
 
-/** Accepts https?:// URLs or same-origin paths like /calculator-images/…. */
-export function normalizeImageUrl(raw: unknown): string | null {
-  if (raw == null) {
-    return null;
-  }
-  if (typeof raw !== "string") {
-    return null;
-  }
-  const t = raw.trim();
-  if (!t) {
-    return null;
-  }
-  if (t.length > 2048) {
-    return null;
-  }
-  if (t.startsWith("/")) {
-    if (t.startsWith("//")) {
-      return null;
-    }
-    return t;
-  }
-  try {
-    const u = new URL(t);
-    if (u.protocol !== "http:" && u.protocol !== "https:") {
-      return null;
-    }
-    return t;
-  } catch {
-    return null;
-  }
-}
-
 function toTempFields(rows: IncomingField[]): CalculatorField[] {
   return rows.map((f, i) => ({
     id: `tmp-${i}`,
@@ -144,6 +110,7 @@ function toTempFields(rows: IncomingField[]): CalculatorField[] {
     defaultValue: f.defaultValue ?? 0,
     selectOptions: f.selectOptions ?? null,
     unitOptions: f.unitOptions ?? null,
+    unitPresetId: f.unitPresetId ?? null,
     sortOrder: f.sortOrder ?? i,
   }));
 }
@@ -179,14 +146,6 @@ export function validateIncomingCalculator(
     return { ok: false, error: "Invalid or unknown category." };
   }
 
-  const imageUrl = normalizeImageUrl(b.imageUrl);
-  if (b.imageUrl != null && String(b.imageUrl).trim() !== "" && !imageUrl) {
-    return {
-      ok: false,
-      error: "Image URL must be empty, a valid http(s) link, or a path starting with / (e.g. /calculator-images/…).",
-    };
-  }
-
   const seo = normalizeSeo(b.seo);
 
   const contentHtmlRaw = typeof b.contentHtml === "string" ? b.contentHtml : null;
@@ -218,8 +177,6 @@ export function validateIncomingCalculator(
     const label = typeof out.label === "string" ? out.label.trim() : "";
     const unit = typeof out.unit === "string" ? out.unit : "";
     const formula = typeof out.formula === "string" ? out.formula.trim() : "";
-    const guidance = typeof out.guidance === "string" ? out.guidance.trim() : undefined;
-    const limitations = typeof out.limitations === "string" ? out.limitations.trim() : undefined;
     if (!label || !formula) {
       return { ok: false, error: "Each output needs a label and formula." };
     }
@@ -258,7 +215,7 @@ export function validateIncomingCalculator(
       }
     }
 
-    outputs.push({ label, unit, formula, guidance, limitations, decimals, ranges });
+    outputs.push({ label, unit, formula, decimals, ranges });
   }
 
   if (!Array.isArray(b.fields) || b.fields.length === 0) {
@@ -306,6 +263,11 @@ export function validateIncomingCalculator(
     const step = typeof f.step === "number" && Number.isFinite(f.step) ? f.step : 1;
     const defaultValue = typeof f.defaultValue === "number" && Number.isFinite(f.defaultValue) ? f.defaultValue : 0;
     const sortOrder = typeof f.sortOrder === "number" && Number.isFinite(f.sortOrder) ? f.sortOrder : i;
+    const unitPresetIdRaw = typeof f.unitPresetId === "string" ? f.unitPresetId.trim() : "";
+    const unitPresetId = unitPresetIdRaw ? unitPresetIdRaw : null;
+    if (unitPresetId && !objectIdRe.test(unitPresetId)) {
+      return { ok: false, error: `Invalid unitPresetId for field “${label}”.` };
+    }
 
     let selectOptions: { label: string; value: number }[] | null = null;
     if (fieldType === "SELECT") {
@@ -379,6 +341,7 @@ export function validateIncomingCalculator(
       sortOrder,
       selectOptions,
       unitOptions,
+      unitPresetId,
     });
     i += 1;
   }
@@ -400,7 +363,6 @@ export function validateIncomingCalculator(
     description,
     formulaPlain,
     category,
-    imageUrl,
     seo,
     contentHtml,
     showOnHome,

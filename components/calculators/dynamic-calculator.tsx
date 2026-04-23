@@ -81,8 +81,6 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
             unit: string;
             value: number;
             variant?: "good" | "warning" | "severe" | "neutral";
-            guidance?: string;
-            limitations?: string;
           }[];
           error?: string;
         };

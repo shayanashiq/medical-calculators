@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminCalculatorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) {
@@ -20,12 +20,25 @@ export default async function AdminCalculatorsPage({
 
   const sp = await searchParams;
   const page = parsePageParam(sp.page);
-  const total = await prisma.calculator.count();
+  const qRaw = typeof sp.q === "string" ? sp.q : "";
+  const q = qRaw.trim();
+  const where = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { slug: { contains: q, mode: "insensitive" as const } },
+          { description: { contains: q, mode: "insensitive" as const } },
+          { category: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+  const total = await prisma.calculator.count({ where });
   const pages = totalPages(total, CALCULATORS_PAGE_SIZE);
   const safePage = Math.min(page, pages);
   const skip = (safePage - 1) * CALCULATORS_PAGE_SIZE;
 
   const rows = await prisma.calculator.findMany({
+    where,
     orderBy: { name: "asc" },
     skip,
     take: CALCULATORS_PAGE_SIZE,
@@ -58,6 +71,15 @@ export default async function AdminCalculatorsPage({
             Add calculator
           </Link>
         </div>
+        <form className="mt-4">
+          <input
+            type="search"
+            name="q"
+            defaultValue={qRaw}
+            placeholder="Search calculators..."
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
+          />
+        </form>
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-left text-sm">
@@ -94,7 +116,12 @@ export default async function AdminCalculatorsPage({
           </table>
         </div>
 
-        <PaginationBar page={safePage} totalPages={pages} basePath="/admin/calculators" />
+        <PaginationBar
+          page={safePage}
+          totalPages={pages}
+          basePath="/admin/calculators"
+          query={q ? { q } : undefined}
+        />
       </div>
     </div>
   );

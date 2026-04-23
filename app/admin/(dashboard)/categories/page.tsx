@@ -2,19 +2,45 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { DeleteCategoryButton } from "@/components/admin/delete-category-button";
 import { NewCategoryForm } from "@/components/admin/new-category-form";
+import { PaginationBar } from "@/components/ui/pagination-bar";
+import { CALCULATORS_PAGE_SIZE, parsePageParam, totalPages } from "@/lib/list-pagination";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCategoriesPage() {
+export default async function AdminCategoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) {
     redirect("/admin/login");
   }
 
+  const sp = await searchParams;
+  const page = parsePageParam(sp.page);
+  const qRaw = typeof sp.q === "string" ? sp.q : "";
+  const q = qRaw.trim();
+  const where = q
+    ? {
+        OR: [
+          { name: { contains: q, mode: "insensitive" as const } },
+          { slug: { contains: q, mode: "insensitive" as const } },
+          { description: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+  const total = await prisma.category.count({ where });
+  const pages = totalPages(total, CALCULATORS_PAGE_SIZE);
+  const safePage = Math.min(page, pages);
+  const skip = (safePage - 1) * CALCULATORS_PAGE_SIZE;
   const rows = await prisma.category.findMany({
+    where,
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    skip,
+    take: CALCULATORS_PAGE_SIZE,
   });
 
   const counts = await Promise.all(
@@ -28,6 +54,15 @@ export default async function AdminCategoriesPage() {
         <p className="mt-1 text-sm text-slate-600">
           Categories drive browse pages and the calculator category dropdown. Slugs are stored on each calculator.
         </p>
+        <form className="mt-4">
+          <input
+            type="search"
+            name="q"
+            defaultValue={qRaw}
+            placeholder="Search categories..."
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
+          />
+        </form>
 
         <div className="mt-8">
           <NewCategoryForm />
@@ -70,6 +105,12 @@ export default async function AdminCategoriesPage() {
             <p className="px-4 py-8 text-center text-sm text-slate-500">No categories yet. Add one above.</p>
           ) : null}
         </div>
+        <PaginationBar
+          page={safePage}
+          totalPages={pages}
+          basePath="/admin/categories"
+          query={q ? { q } : undefined}
+        />
       </div>
     </div>
   );

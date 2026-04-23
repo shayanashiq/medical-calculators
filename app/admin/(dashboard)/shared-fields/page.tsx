@@ -3,16 +3,38 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DeleteSharedFieldButton } from "@/components/admin/delete-shared-field-button";
 import { ImportExistingFieldsButton } from "@/components/admin/import-existing-fields-button";
+import { PaginationBar } from "@/components/ui/pagination-bar";
+import { CALCULATORS_PAGE_SIZE, parsePageParam, totalPages } from "@/lib/list-pagination";
 import { getAllSharedFieldsForAdmin } from "@/lib/shared-field-queries";
 
 export const dynamic = "force-dynamic";
 
-export default async function SharedFieldsAdminPage() {
+export default async function SharedFieldsAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) {
     redirect("/admin/login");
   }
-  const rows = await getAllSharedFieldsForAdmin();
+  const sp = await searchParams;
+  const page = parsePageParam(sp.page);
+  const qRaw = typeof sp.q === "string" ? sp.q : "";
+  const q = qRaw.trim().toLowerCase();
+  const allRows = await getAllSharedFieldsForAdmin();
+  const filtered = q
+    ? allRows.filter(
+        (r) =>
+          r.label.toLowerCase().includes(q) ||
+          r.slug.toLowerCase().includes(q) ||
+          r.key.toLowerCase().includes(q),
+      )
+    : allRows;
+  const pages = totalPages(filtered.length, CALCULATORS_PAGE_SIZE);
+  const safePage = Math.min(page, pages);
+  const skip = (safePage - 1) * CALCULATORS_PAGE_SIZE;
+  const rows = filtered.slice(skip, skip + CALCULATORS_PAGE_SIZE);
 
   return (
     <div className="p-6 lg:p-10">
@@ -34,6 +56,15 @@ export default async function SharedFieldsAdminPage() {
             </Link>
           </div>
         </div>
+        <form className="mt-4">
+          <input
+            type="search"
+            name="q"
+            defaultValue={qRaw}
+            placeholder="Search fields..."
+            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
+          />
+        </form>
 
         <ul className="mt-8 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
           {rows.length === 0 ? (
@@ -62,6 +93,12 @@ export default async function SharedFieldsAdminPage() {
             ))
           )}
         </ul>
+        <PaginationBar
+          page={safePage}
+          totalPages={pages}
+          basePath="/admin/shared-fields"
+          query={q ? { q } : undefined}
+        />
       </div>
     </div>
   );

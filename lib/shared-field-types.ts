@@ -14,5 +14,6 @@ export type SharedFieldListItem = {
   defaultValue: number;
   selectOptions: SharedFieldSelectOption[] | null;
   unitOptions: UnitPresetOption[] | null;
+  unitPresetId: string | null;
   description: string | null;
 };

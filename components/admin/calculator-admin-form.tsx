@@ -3,7 +3,7 @@
 import type { FieldType } from "@prisma/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { IncomingField, IncomingOutput } from "@/lib/admin-calculator-payload";
 import {
   buildContentHtmlFromBlocks,
@@ -22,7 +22,6 @@ type AdminRow = {
   description: string;
   formulaPlain: string;
   category: string;
-  imageUrl: string | null;
   contentHtml: string | null;
   showOnHome: boolean;
   outputs: unknown;
@@ -40,6 +39,7 @@ type AdminRow = {
     sortOrder: number;
     selectOptions: unknown;
     unitOptions: unknown;
+    unitPresetId?: string | null;
   }[];
 };
 
@@ -97,7 +97,6 @@ function mapRowToForm(row: AdminRow) {
     description: row.description,
     formulaPlain: row.formulaPlain,
     category: row.category,
-    imageUrl: row.imageUrl ?? "",
     contentHtml: row.contentHtml ?? "",
     showOnHome: row.showOnHome ?? false,
     outputs: row.outputs as IncomingOutput[],
@@ -124,6 +123,7 @@ function mapRowToForm(row: AdminRow) {
           min?: number;
           max?: number;
         }[] | null) ?? null,
+      unitPresetId: f.unitPresetId ?? null,
     })),
   };
 }
@@ -133,24 +133,9 @@ const defaultFormWithoutCategory = {
   name: "",
   description: "",
   formulaPlain: "",
-  imageUrl: "",
   contentHtml: "",
-  outputs: [{ label: "Result", unit: "", formula: "", decimals: 1 }] as IncomingOutput[],
-  fields: [
-    {
-      sharedFieldId: null,
-      key: "x",
-      label: "X",
-      fieldType: "NUMBER" as const,
-      min: 0,
-      max: 100,
-      step: 1,
-      defaultValue: 1,
-      sortOrder: 0,
-      selectOptions: null as { label: string; value: number }[] | null,
-      unitOptions: null,
-    },
-  ] as IncomingField[],
+  outputs: [] as IncomingOutput[],
+  fields: [] as IncomingField[],
   validationExpr: null as string | null,
   validationMessage: null as string | null,
   showOnHome: false,
@@ -182,7 +167,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const contentBlocksRef = useRef<HTMLDivElement | null>(null);
 
   const applyContentBlocks = (blocks: ContentBlock[]) => {
     setContentBlocks(blocks);
@@ -201,6 +186,9 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
     setContentBlocks((prev) => {
       const next = [...prev, { id: newContentBlockId(), heading: "", content: "" }];
       setForm((f) => ({ ...f, contentHtml: buildContentHtmlFromBlocks(next) }));
+      setTimeout(() => {
+        contentBlocksRef.current?.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
       return next;
     });
   };
@@ -212,28 +200,6 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       return next;
     });
   };
-
-  async function onPickImage(ev: React.ChangeEvent<HTMLInputElement>) {
-    const file = ev.target.files?.[0];
-    ev.target.value = "";
-    if (!file) {
-      return;
-    }
-    setError(null);
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload-calculator-image", { method: "POST", body: fd });
-    const data = (await res.json()) as { url?: string; error?: string };
-    setUploading(false);
-    if (!res.ok) {
-      setError(data.error ?? "Image upload failed.");
-      return;
-    }
-    if (data.url) {
-      setForm((f) => ({ ...f, imageUrl: data.url! }));
-    }
-  }
 
   const setOutput = (index: number, patch: Partial<IncomingOutput>) => {
     setForm((f) => ({
@@ -280,6 +246,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           sortOrder: f.fields.length,
           selectOptions: null,
           unitOptions: null,
+          unitPresetId: null,
         },
       ],
     }));
@@ -305,6 +272,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           sortOrder: f.fields.length,
           selectOptions: shared.selectOptions ? shared.selectOptions.map((o) => ({ ...o })) : null,
           unitOptions: shared.unitOptions ? shared.unitOptions.map((o) => ({ ...o })) : null,
+          unitPresetId: shared.unitPresetId ?? null,
         },
       ],
     }));
@@ -366,7 +334,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           ...(fld.unitOptions ?? []),
           { key: `u${(fld.unitOptions?.length ?? 0) + 1}`, label: "Unit", suffix: "", mul: 1 },
         ];
-        return { ...fld, unitOptions: opts };
+        return { ...fld, unitPresetId: null, unitOptions: opts };
       });
       return { ...f, fields };
     });
@@ -391,7 +359,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           return fld;
         }
         const opts = (fld.unitOptions ?? []).map((o, j) => (j === optIndex ? { ...o, ...patch } : o));
-        return { ...fld, unitOptions: opts };
+        return { ...fld, unitPresetId: null, unitOptions: opts };
       });
       return { ...f, fields };
     });
@@ -404,7 +372,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           return fld;
         }
         const opts = (fld.unitOptions ?? []).filter((_, j) => j !== optIndex);
-        return { ...fld, unitOptions: opts };
+        return { ...fld, unitPresetId: null, unitOptions: opts };
       });
       return { ...f, fields };
     });
@@ -419,15 +387,12 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       description: form.description.trim(),
       formulaPlain: form.formulaPlain.trim(),
       category: form.category,
-      imageUrl: form.imageUrl.trim() || null,
       contentHtml: form.contentHtml.trim() || null,
       showOnHome: form.showOnHome,
       outputs: form.outputs.map((o) => ({
         label: o.label.trim(),
         unit: o.unit.trim(),
         formula: o.formula.trim(),
-        guidance: o.guidance?.trim() || undefined,
-        limitations: o.limitations?.trim() || undefined,
         decimals: o.decimals,
         ranges: o.ranges,
       })),
@@ -443,6 +408,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
         sortOrder: idx,
         selectOptions: fld.fieldType === "SELECT" ? fld.selectOptions : null,
         unitOptions: fld.fieldType === "NUMBER" ? (fld.unitOptions ?? null) : null,
+        unitPresetId: fld.fieldType === "NUMBER" ? (fld.unitPresetId ?? null) : null,
       })),
       validationExpr: form.validationExpr?.trim() || null,
       validationMessage: form.validationMessage?.trim() || null,
@@ -531,7 +497,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div ref={contentBlocksRef} className="space-y-4">
             {contentBlocks.length === 0 ? (
               <p className="text-sm text-slate-500">No sections yet. Click &ldquo;Add section&rdquo;.</p>
             ) : (
@@ -625,45 +591,6 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           </span>
         </label>
 
-        <div className="sm:col-span-2">
-          <span className="mb-1 block text-sm font-semibold text-slate-700">Card image (optional)</span>
-          <p className="mb-2 text-xs text-slate-500">
-            Shown on listing cards. Paste an https image URL, or upload a file (stored under{" "}
-            <code className="rounded bg-slate-100 px-1">/calculator-images/</code> — works on servers with a writable
-            disk; use a URL on read-only hosts like Vercel).
-          </p>
-          <input
-            type="text"
-            value={form.imageUrl}
-            onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm"
-            placeholder="https://… or /calculator-images/…"
-          />
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={onPickImage} disabled={uploading} />
-              {uploading ? "Uploading…" : "Upload image"}
-            </label>
-            {form.imageUrl.trim() ? (
-              <button
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, imageUrl: "" }))}
-                className="text-sm font-semibold text-red-600 hover:text-red-800"
-              >
-                Remove image
-              </button>
-            ) : null}
-          </div>
-          {form.imageUrl.trim() ? (
-            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-              <img
-                src={form.imageUrl.trim()}
-                alt="Preview"
-                className="mx-auto max-h-40 w-auto object-contain"
-              />
-            </div>
-          ) : null}
-        </div>
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -684,7 +611,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           {form.outputs.map((o, i) => (
             <div key={i} className="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
               <div className="mb-2 flex justify-end">
-                {form.outputs.length > 1 ? (
+                {form.outputs.length > 0 ? (
                   <button type="button" onClick={() => removeOutput(i)} className="text-xs font-semibold text-red-600">
                     Remove
                   </button>
@@ -730,31 +657,6 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                 </label>
                 <label className="block sm:col-span-2">
                   <span className="mb-1 block text-xs font-semibold text-slate-600">
-                    Default health guidance (optional)
-                  </span>
-                  <textarea
-                    value={o.guidance ?? ""}
-                    onChange={(e) => setOutput(i, { guidance: e.target.value })}
-                    rows={2}
-                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-                    placeholder="Used for calculators without ranges, or when no range guidance is matched."
-                  />
-                </label>
-                <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-xs font-semibold text-slate-600">
-                    Limitations (optional)
-                  </span>
-                  <textarea
-                    value={o.limitations ?? ""}
-                    onChange={(e) => setOutput(i, { limitations: e.target.value })}
-                    rows={2}
-                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-                    placeholder="Shown on the right-side limitations card."
-                  />
-                </label>
-
-                <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-xs font-semibold text-slate-600">
                     Severity ranges (JSON, optional)
                   </span>
                   <textarea
@@ -767,7 +669,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                           return;
                         }
                         setError(null);
-                        setOutput(i, { ranges: parsed as any });
+                        setOutput(i, { ranges: parsed as IncomingOutput["ranges"] });
                       } catch {
                         setError("Ranges JSON is invalid.");
                       }
@@ -828,7 +730,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                 ) : (
                   <span />
                 )}
-                {form.fields.length > 1 ? (
+                {form.fields.length > 0 ? (
                   <button type="button" onClick={() => removeField(i)} className="text-xs font-semibold text-red-600">
                     Remove field
                   </button>
@@ -865,6 +767,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                       setField(i, {
                         fieldType: e.target.value === "SELECT" ? "SELECT" : "NUMBER",
                         selectOptions: e.target.value === "SELECT" ? fld.selectOptions ?? [{ label: "A", value: 0 }] : null,
+                        unitPresetId: e.target.value === "SELECT" ? null : fld.unitPresetId ?? null,
                       })
                     }
                     className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
@@ -943,7 +846,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                             return;
                           }
                           setError(null);
-                          setField(i, { unitOptions: preset.options.map((o) => ({ ...o })) });
+                          setField(i, { unitPresetId: preset.id, unitOptions: preset.options.map((o) => ({ ...o })) });
                         }}
                       >
                         <option value="">— Load saved units into this field —</option>

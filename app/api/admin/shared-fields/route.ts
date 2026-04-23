@@ -29,6 +29,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
   const { data } = parsed;
+  if (data.unitPresetId) {
+    const exists = await prisma.unitPreset.count({ where: { id: data.unitPresetId } });
+    if (!exists) {
+      return NextResponse.json({ error: "Selected unit preset no longer exists." }, { status: 400 });
+    }
+  }
   try {
     const row = await prisma.sharedField.create({
       data: {
@@ -42,6 +48,7 @@ export async function POST(req: Request) {
         defaultValue: data.defaultValue,
         selectOptions: data.selectOptions ?? undefined,
         unitOptions: data.unitOptions ?? undefined,
+        unitPresetId: data.unitPresetId ?? null,
         description: data.description,
       },
     });

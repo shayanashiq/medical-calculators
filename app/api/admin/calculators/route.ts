@@ -48,6 +48,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "One or more selected shared fields no longer exist." }, { status: 400 });
     }
   }
+  const unitPresetIds = Array.from(
+    new Set(data.fields.map((f) => f.unitPresetId).filter((v): v is string => Boolean(v))),
+  );
+  if (unitPresetIds.length > 0) {
+    const count = await prisma.unitPreset.count({ where: { id: { in: unitPresetIds } } });
+    if (count !== unitPresetIds.length) {
+      return NextResponse.json({ error: "One or more selected unit presets no longer exist." }, { status: 400 });
+    }
+  }
 
   const exists = await prisma.calculator.findUnique({ where: { slug: data.slug } });
   if (exists) {
@@ -61,7 +70,6 @@ export async function POST(req: Request) {
       description: data.description,
       formulaPlain: data.formulaPlain,
       category: data.category,
-      imageUrl: data.imageUrl,
       seo: (data.seo ?? null) as Prisma.InputJsonValue,
       contentHtml: data.contentHtml ?? null,
       limitationsDetailed: data.limitationsDetailed ?? null,
@@ -79,6 +87,7 @@ export async function POST(req: Request) {
           step: f.step,
           defaultValue: f.defaultValue,
           sharedFieldId: f.sharedFieldId ?? null,
+          unitPresetId: f.unitPresetId ?? null,
           sortOrder: f.sortOrder ?? idx,
           selectOptions: f.selectOptions ?? undefined,
           unitOptions: f.unitOptions ?? undefined,

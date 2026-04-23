@@ -3,6 +3,7 @@ import type { UnitPresetOption } from "@/lib/unit-preset-types";
 
 const slugRe = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const keyRe = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+const objectIdRe = /^[a-f\d]{24}$/i;
 
 export type IncomingSharedFieldBody = {
   slug: string;
@@ -15,6 +16,7 @@ export type IncomingSharedFieldBody = {
   defaultValue: number;
   selectOptions: SharedFieldSelectOption[] | null;
   unitOptions: UnitPresetOption[] | null;
+  unitPresetId: string | null;
   description: string | null;
 };
 
@@ -35,6 +37,11 @@ export function validateIncomingSharedField(
   const max = typeof b.max === "number" && Number.isFinite(b.max) ? b.max : null;
   const step = typeof b.step === "number" && Number.isFinite(b.step) ? b.step : 1;
   const defaultValue = typeof b.defaultValue === "number" && Number.isFinite(b.defaultValue) ? b.defaultValue : 0;
+  const unitPresetIdRaw = typeof b.unitPresetId === "string" ? b.unitPresetId.trim() : "";
+  const unitPresetId = unitPresetIdRaw ? unitPresetIdRaw : null;
+  if (unitPresetId && !objectIdRe.test(unitPresetId)) {
+    return { ok: false, error: "Invalid unitPresetId." };
+  }
 
   if (!slugRe.test(slug)) {
     return { ok: false, error: "Slug must be lowercase letters, numbers, and hyphens only." };
@@ -121,6 +128,7 @@ export function validateIncomingSharedField(
       defaultValue,
       selectOptions,
       unitOptions,
+      unitPresetId: fieldType === "NUMBER" ? unitPresetId : null,
       description,
     },
   };

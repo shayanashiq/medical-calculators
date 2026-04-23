@@ -27,6 +27,7 @@ type FieldForm = {
   defaultValue: number;
   selectOptions: SelectOption[] | null;
   unitOptions: UnitPresetOption[] | null;
+  unitPresetId: string | null;
   description: string;
 };
 
@@ -42,6 +43,7 @@ function defaultForm(): FieldForm {
     defaultValue: 0,
     selectOptions: null,
     unitOptions: null,
+    unitPresetId: null,
     description: "",
   };
 }
@@ -58,6 +60,7 @@ function mapInitial(initial: SharedFieldListItem): FieldForm {
     defaultValue: initial.defaultValue,
     selectOptions: initial.selectOptions,
     unitOptions: initial.unitOptions,
+    unitPresetId: initial.unitPresetId,
     description: initial.description ?? "",
   };
 }
@@ -82,6 +85,7 @@ export function SharedFieldAdminForm({ mode, fieldId, unitPresets, initial }: Pr
       defaultValue: form.defaultValue,
       selectOptions: form.fieldType === "SELECT" ? form.selectOptions : null,
       unitOptions: form.fieldType === "NUMBER" ? form.unitOptions : null,
+      unitPresetId: form.fieldType === "NUMBER" ? form.unitPresetId : null,
       description: form.description.trim() || null,
     };
     const url = mode === "create" ? "/api/admin/shared-fields" : `/api/admin/shared-fields/${fieldId}`;
@@ -126,6 +130,7 @@ export function SharedFieldAdminForm({ mode, fieldId, unitPresets, initial }: Pr
                   ...f,
                   fieldType: e.target.value === "SELECT" ? "SELECT" : "NUMBER",
                   selectOptions: e.target.value === "SELECT" ? f.selectOptions ?? [{ label: "Option", value: 0 }] : null,
+                  unitPresetId: e.target.value === "SELECT" ? null : f.unitPresetId,
                 }))
               }
               className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
@@ -180,7 +185,11 @@ export function SharedFieldAdminForm({ mode, fieldId, unitPresets, initial }: Pr
                     if (!id) return;
                     const preset = unitPresets.find((p) => p.id === id);
                     if (!preset) return;
-                    setForm((f) => ({ ...f, unitOptions: preset.options.map((o) => ({ ...o })) }));
+                    setForm((f) => ({
+                      ...f,
+                      unitPresetId: preset.id,
+                      unitOptions: preset.options.map((o) => ({ ...o })),
+                    }));
                   }}
                 >
                   <option value="">— Load unit options from preset —</option>

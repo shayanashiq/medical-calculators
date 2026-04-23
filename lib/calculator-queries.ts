@@ -16,7 +16,6 @@ const listSelect = {
   name: true,
   formulaPlain: true,
   description: true,
-  imageUrl: true,
   showOnHome: true,
 } as const;
 
@@ -111,22 +110,32 @@ export async function listCalculatorsPaginated(
 export async function getCalculatorBySlug(slug: string): Promise<PublicCalculator | null> {
   const row = await prisma.calculator.findUnique({
     where: { slug },
-    include: { fields: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      fields: {
+        orderBy: { sortOrder: "asc" },
+        include: { sharedField: { include: { unitPreset: true } }, unitPreset: true },
+      },
+    },
   });
   if (!row) {
     return null;
   }
-  const fields: PublicField[] = row.fields.map((f) => ({
-    key: f.key,
-    label: f.label,
-    fieldType: f.fieldType,
-    min: f.min,
-    max: f.max,
-    step: f.step,
-    defaultValue: f.defaultValue,
-    selectOptions: f.selectOptions as PublicField["selectOptions"],
-    unitOptions: (f.unitOptions as PublicField["unitOptions"]) ?? null,
-  }));
+  const fields: PublicField[] = row.fields.map((f) => {
+    const base = f.sharedField ?? f;
+    const unitOptionsFromPreset = f.unitPreset?.options ?? f.sharedField?.unitPreset?.options;
+    return {
+      key: base.key,
+      label: base.label,
+      fieldType: base.fieldType,
+      min: base.min,
+      max: base.max,
+      step: base.step,
+      defaultValue: base.defaultValue,
+      selectOptions: base.selectOptions as PublicField["selectOptions"],
+      unitOptions:
+        ((unitOptionsFromPreset ?? base.unitOptions) as PublicField["unitOptions"]) ?? null,
+    };
+  });
   const outputs = (Array.isArray(row.outputs) ? row.outputs : []) as CalculatorOutputDef[];
   const seoRaw = row.seo as unknown;
   const seo =
@@ -140,7 +149,6 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
     name: row.name,
     formulaPlain: row.formulaPlain,
     description: row.description,
-    imageUrl: row.imageUrl,
     showOnHome: row.showOnHome,
     fields,
     outputs,

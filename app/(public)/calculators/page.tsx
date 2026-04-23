@@ -46,8 +46,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-const INITIAL = 12;
-
 export default async function CalculatorsIndexPage({
   searchParams,
 }: {
@@ -56,7 +54,7 @@ export default async function CalculatorsIndexPage({
   const sp = await searchParams;
   const qRaw = typeof sp.q === "string" ? sp.q : "";
   const q = qRaw.trim() || undefined;
-  const { items, total } = await browseCalculatorsChunk(0, INITIAL, q);
+  const { items, total } = await browseCalculatorsChunk(0, Number.MAX_SAFE_INTEGER, q);
 
   return (
     <main className="mx-auto w-full max-w-7xl bg-white px-4 py-6 sm:px-6 lg:px-8">

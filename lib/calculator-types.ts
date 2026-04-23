@@ -5,7 +5,6 @@ export type CalculatorListItem = {
   name: string;
   formulaPlain: string;
   description: string;
-  imageUrl: string | null;
   showOnHome: boolean;
 };
 
@@ -13,10 +12,6 @@ export type CalculatorOutputDef = {
   label: string;
   unit: string;
   formula: string;
-  /** Used when output has no ranges, or as fallback guidance text. */
-  guidance?: string;
-  /** Optional limitation notes for this output/calculator result. */
-  limitations?: string;
   decimals?: number;
   ranges?: Array<{
     min?: number;

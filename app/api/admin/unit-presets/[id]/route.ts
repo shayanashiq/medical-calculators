@@ -40,14 +40,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data } = parsed;
 
   try {
-    const row = await prisma.unitPreset.update({
-      where: { id },
-      data: {
-        slug: data.slug,
-        name: data.name,
-        description: data.description,
-        options: data.options,
-      },
+    const row = await prisma.$transaction(async (tx) => {
+      const updated = await tx.unitPreset.update({
+        where: { id },
+        data: {
+          slug: data.slug,
+          name: data.name,
+          description: data.description,
+          options: data.options,
+        },
+      });
+      await tx.sharedField.updateMany({
+        where: { unitPresetId: id },
+        data: { unitOptions: data.options },
+      });
+      await tx.calculatorField.updateMany({
+        where: { unitPresetId: id },
+        data: { unitOptions: data.options },
+      });
+      return updated;
     });
     return NextResponse.json(row);
   } catch {
