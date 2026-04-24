@@ -59,11 +59,11 @@ export default async function CalculatorsIndexPage({
   return (
     <main className="mx-auto w-full max-w-7xl bg-white px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-6 max-w-3xl">
-        <p className="text-sm leading-7 text-slate-600">
+        {/* <p className="text-sm leading-7 text-slate-600">
           Browse our collection of free online medical calculators and health assessment tools. Each clinical
           calculator includes clear inputs, instant results, and supporting guidance to help you understand the
           calculation.
-        </p>
+        </p> */}
       </section>
       <CalculatorsBrowseClient initialItems={items} initialTotal={total} initialSearch={qRaw} />
     </main>

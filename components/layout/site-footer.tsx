@@ -10,7 +10,7 @@ export async function SiteFooter() {
   const categories = await getAllCategories();
 
   return (
-    <footer className="mt-14 border-t border-slate-200 bg-gradient-to-b from-white to-slate-50/80 text-slate-700">
+    <footer className="mt-14 border-t border-slate-200 bg-white text-slate-700">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:pr-6">
@@ -24,7 +24,7 @@ export async function SiteFooter() {
                 className="h-10 w-auto"
               />
               <div className="min-w-0">
-                <p className="text-md font-bold tracking-tight text-slate-900">{SITE_TITLE_DEFAULT}</p>
+                <p className="text-xl font-bold tracking-tight text-slate-900">Medical Calculators</p>
                 <p className="mt-0.5 text-xs font-semibold text-slate-500">{SITE_DOMAIN}</p>
               </div>
             </div>
@@ -46,8 +46,8 @@ export async function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-bold tracking-tight text-slate-900">Popular calculators</p>
-            <ul className="mt-4 space-y-2.5">
+            <p className="text-xl font-bold tracking-tight text-slate-900">Popular calculators</p>
+            <ul className="mt-4 space-y-1.5">
               <li>
                 <Link href="/calculators/bmi" className={footerLinkClass}>
                   BMI Calculator
@@ -72,8 +72,8 @@ export async function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-bold tracking-tight text-slate-900">Health categories</p>
-            <ul className="mt-4 space-y-2.5">
+            <p className="text-xl font-bold tracking-tight text-slate-900">Health categories</p>
+            <ul className="mt-4 space-y-1.5">
               {categories.map((c) => (
                 <li key={c.slug}>
                   <Link href={`/categories/${c.slug}`} className={footerLinkClass}>
@@ -85,12 +85,14 @@ export async function SiteFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-bold tracking-tight text-slate-900">Resources</p>
-            <ul className="mt-4 space-y-2.5">
+            <p className="text-xl font-bold tracking-tight text-slate-900">Resources</p>
+            <ul className="mt-4 space-y-1.5">
               <li>
                 <Link href="/about" className={footerLinkClass}>
                   About
                 </Link>
+              </li>
+              <li>
                 <Link href="/blog" className={footerLinkClass}>
                   Blog
                 </Link>

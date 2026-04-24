@@ -5,6 +5,7 @@ import { PopularCalculatorsSection } from "@/components/home/popular-calculators
 import { getCalculatorCount, listCalculators } from "@/lib/calculator-queries";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_TITLE_DEFAULT } from "@/lib/site-brand";
+import { HomeInfoStrip } from "@/components/home/home-info-strip";
 
 export async function generateMetadata(): Promise<Metadata> {
   const total = await getCalculatorCount();
