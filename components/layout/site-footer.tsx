@@ -88,6 +88,9 @@ export async function SiteFooter() {
             <p className="text-sm font-bold tracking-tight text-slate-900">Resources</p>
             <ul className="mt-4 space-y-2.5">
               <li>
+                <Link href="/about" className={footerLinkClass}>
+                  About
+                </Link>
                 <Link href="/blog" className={footerLinkClass}>
                   Blog
                 </Link>

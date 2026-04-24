@@ -49,15 +49,15 @@ export default function AboutPage() {
                 <div className="flex flex-col sm:flex-row gap-10 items-start">
                     {/* Photo + identity */}
                     <div className="flex-shrink-0 flex flex-col items-center sm:items-start gap-3 sm:w-52">
-                    <div className="w-36 h-36 rounded-2xl overflow-hidden ring-4 ring-teal-500 shadow-lg">
-  <div className="w-full h-full rounded-[14px] overflow-hidden">
-    <img
-      src="/sajeel.png"
-      alt="Sajeel Ahmad"
-      className="w-full h-full object-cover object-top"
-    />
-  </div>
-</div>
+                        <div className="w-36 h-36 rounded-2xl overflow-hidden ring-4 ring-teal-500 shadow-lg">
+                            <div className="w-full h-full rounded-[14px] overflow-hidden">
+                                <img
+                                    src="/sajeel.png"
+                                    alt="Sajeel Ahmad"
+                                    className="w-full h-full object-cover object-top"
+                                />
+                            </div>
+                        </div>
                         <div className="text-center sm:text-left">
                             <div className="font-bold text-slate-900 text-lg leading-tight">Sajeel Ahmad</div>
                             <div className="text-sm text-teal-600 font-medium mt-0.5">Founder &amp; Developer</div>

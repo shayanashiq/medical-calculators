@@ -59,6 +59,9 @@ export function SiteHeader() {
               <Link href="/" className={navLinkClass}>
                 Home
               </Link>
+              <Link href="/about" className={navLinkClass}>
+                About
+              </Link>
               <Link href="/categories" className={navLinkClass}>
                 Categories
               </Link>
