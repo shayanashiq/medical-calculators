@@ -470,87 +470,6 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
           />
         </label>
 
-        <div className="block sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <span className="block text-sm font-semibold text-slate-700">Calculator page content</span>
-              <p className="mt-1 text-xs text-slate-500">
-                Add sections with a heading and body. For tables or other markup, paste HTML in the content field. No fixed
-                section names.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={addContentBlock}
-                className="rounded-lg border border-teal-600 bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700"
-              >
-                + Add section
-              </button>
-              <button
-                type="button"
-                onClick={() => applyContentBlocks(createBmiSampleContentBlocks())}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Use BMI sample sections
-              </button>
-            </div>
-          </div>
-
-          <div ref={contentBlocksRef} className="space-y-4">
-            {contentBlocks.length === 0 ? (
-              <p className="text-sm text-slate-500">No sections yet. Click &ldquo;Add section&rdquo;.</p>
-            ) : (
-              contentBlocks.map((block, idx) => (
-                <div key={block.id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-slate-500">Section {idx + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeContentBlock(block.id)}
-                      className="text-xs font-semibold text-red-600 hover:text-red-800"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-600">Heading</span>
-                    <input
-                      value={block.heading}
-                      onChange={(e) => updateContentBlock(block.id, { heading: e.target.value })}
-                      className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
-                      placeholder="e.g. Clinical significance"
-                    />
-                  </label>
-                  <label className="mt-2 block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-600">Content</span>
-                    <textarea
-                      value={block.content}
-                      onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-300 px-2 py-1.5 font-mono text-sm"
-                      placeholder="Plain text (blank line = new paragraph) or HTML"
-                    />
-                  </label>
-                </div>
-              ))
-            )}
-          </div>
-
-          <label className="mt-3 block">
-            <span className="mb-1 block text-xs font-semibold text-slate-600">Advanced HTML (full page block)</span>
-            <textarea
-              value={form.contentHtml}
-              onChange={(e) => setForm((f) => ({ ...f, contentHtml: e.target.value }))}
-              rows={6}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs shadow-sm"
-            />
-            <span className="mt-1 block text-[11px] text-slate-400">
-              Editing here does not update the section list above until you reload the page.
-            </span>
-          </label>
-        </div>
-
         <label className="block">
           <span className="mb-1 block text-sm font-semibold text-slate-700">Category</span>
           {categoryList.length === 0 ? (
@@ -1027,6 +946,74 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
             className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
           />
         </label>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Calculator page content</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Add sections with a heading and body. For tables or other markup, paste HTML in the content field. No fixed
+              section names.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={addContentBlock}
+              className="rounded-lg border border-teal-600 bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700"
+            >
+              + Add section
+            </button>
+            <button
+              type="button"
+              onClick={() => applyContentBlocks(createBmiSampleContentBlocks())}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Use BMI sample sections
+            </button>
+          </div>
+        </div>
+
+        <div ref={contentBlocksRef} className="space-y-4">
+          {contentBlocks.length === 0 ? (
+            <p className="text-sm text-slate-500">No sections yet. Click &ldquo;Add section&rdquo;.</p>
+          ) : (
+            contentBlocks.map((block, idx) => (
+              <div key={block.id} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-slate-500">Section {idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeContentBlock(block.id)}
+                    className="text-xs font-semibold text-red-600 hover:text-red-800"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-slate-600">Heading</span>
+                  <input
+                    value={block.heading}
+                    onChange={(e) => updateContentBlock(block.id, { heading: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    placeholder="e.g. Clinical significance"
+                  />
+                </label>
+                <label className="mt-2 block">
+                  <span className="mb-1 block text-xs font-semibold text-slate-600">Content</span>
+                  <textarea
+                    value={block.content}
+                    onChange={(e) => updateContentBlock(block.id, { content: e.target.value })}
+                    rows={5}
+                    className="w-full rounded-lg border border-slate-300 px-2 py-1.5 font-mono text-sm"
+                    placeholder="Plain text (blank line = new paragraph) or HTML"
+                  />
+                </label>
+              </div>
+            ))
+          )}
+        </div>
       </section>
 
       {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
