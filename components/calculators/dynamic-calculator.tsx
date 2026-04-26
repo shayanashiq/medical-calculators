@@ -7,6 +7,7 @@ import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/componen
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
 import type { CalculatorResultRow } from "@/lib/public-calculator-eval";
+import { evaluatePublicOutputs } from "@/lib/public-calculator-eval";
 
 type Props = { calculator: PublicCalculator; initialResults?: CalculatorResultRow[] };
 
@@ -70,6 +71,12 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
       setPending(true);
       setError(null);
       try {
+        // When offline (or if the request fails), we can evaluate outputs locally.
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          setResults(evaluatePublicOutputs(calculator.outputs, next));
+          return;
+        }
+
         const res = await fetch(`/api/calculators/${calculator.slug}/calculate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -90,12 +97,17 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
         }
         setResults(data.results ?? null);
       } catch {
-        setError("Network error. Try again.");
+        try {
+          setResults(evaluatePublicOutputs(calculator.outputs, next));
+          setError("You appear to be offline — showing offline results.");
+        } catch {
+          setError("Network error. Try again.");
+        }
       } finally {
         setPending(false);
       }
     },
-    [calculator.slug],
+    [calculator.outputs, calculator.slug],
   );
 
   const setNumber = (key: string, n: number) => {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getMergedSiteKeywords } from "@/lib/seo-keywords";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import {
   SITE_DESCRIPTION,
   SITE_DOMAIN,
@@ -30,10 +31,15 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: SITE_DESCRIPTION,
     keywords,
+    manifest: "/manifest.webmanifest",
     applicationName: SITE_TITLE_DEFAULT,
     authors: [{ name: SITE_TITLE_DEFAULT, url: SITE_URL }],
     creator: SITE_TITLE_DEFAULT,
     publisher: SITE_DOMAIN,
+    icons: {
+      icon: "/logo.png",
+      apple: "/logo.png",
+    },
     formatDetection: {
       email: false,
       address: false,
@@ -114,6 +120,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

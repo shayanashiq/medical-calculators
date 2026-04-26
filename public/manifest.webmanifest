@@ -1,0 +1,18 @@
+{
+  "name": "Health Calculators",
+  "short_name": "Calculators",
+  "description": "Medical calculators that work online and offline.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
