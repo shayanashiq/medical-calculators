@@ -48,6 +48,8 @@ export function validateIncomingUnitPreset(body: unknown): { ok: true; data: Inc
     const add = typeof u.add === "number" && Number.isFinite(u.add) ? u.add : undefined;
     const min = typeof u.min === "number" && Number.isFinite(u.min) ? u.min : undefined;
     const max = typeof u.max === "number" && Number.isFinite(u.max) ? u.max : undefined;
+    const defaultValue =
+      typeof u.defaultValue === "number" && Number.isFinite(u.defaultValue) ? u.defaultValue : undefined;
     if (!key || !label || !Number.isFinite(mul)) {
       return { ok: false, error: "Each unit needs key, label, and a finite mul." };
     }
@@ -58,7 +60,7 @@ export function validateIncomingUnitPreset(body: unknown): { ok: true; data: Inc
       return { ok: false, error: `Duplicate unit key “${key}”.` };
     }
     seen.add(key);
-    options.push({ key, label, suffix, mul, add, min, max });
+    options.push({ key, label, suffix, mul, add, min, max, defaultValue });
   }
 
   return { ok: true, data: { slug, name, description, options } };

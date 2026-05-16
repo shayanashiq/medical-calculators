@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  createUnitPresetAction,
+  updateUnitPresetAction,
+} from "@/app/actions/admin-actions";
 import type { UnitPresetOption } from "@/lib/unit-preset-types";
 
 type Props = {
@@ -48,23 +52,25 @@ export function UnitPresetAdminForm({ mode, presetId, initial }: Props) {
         add: typeof o.add === "number" && Number.isFinite(o.add) ? o.add : undefined,
         min: typeof o.min === "number" && Number.isFinite(o.min) ? o.min : undefined,
         max: typeof o.max === "number" && Number.isFinite(o.max) ? o.max : undefined,
+        defaultValue:
+          typeof o.defaultValue === "number" && Number.isFinite(o.defaultValue)
+            ? o.defaultValue
+            : undefined,
       }))
       .filter((o) => o.key && o.label);
 
-    const url = mode === "create" ? "/api/admin/unit-presets" : `/api/admin/unit-presets/${presetId}`;
-    const res = await fetch(url, {
-      method: mode === "create" ? "POST" : "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug: slug.trim(),
-        name: name.trim(),
-        description: description.trim() ? description.trim() : null,
-        options: trimmed,
-      }),
-    });
-    const data = (await res.json()) as { error?: string };
+    const payload = {
+      slug: slug.trim(),
+      name: name.trim(),
+      description: description.trim() ? description.trim() : null,
+      options: trimmed,
+    };
+    const data =
+      mode === "create"
+        ? await createUnitPresetAction(payload)
+        : await updateUnitPresetAction(presetId ?? "", payload);
     setSaving(false);
-    if (!res.ok) {
+    if (!data.ok) {
       setError(data.error ?? "Save failed.");
       return;
     }
@@ -205,6 +211,21 @@ export function UnitPresetAdminForm({ mode, presetId, initial }: Props) {
                   value={opt.max ?? ""}
                   onChange={(e) =>
                     setOpt(i, { max: e.target.value === "" ? undefined : Number(e.target.value) })
+                  }
+                  className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                  placeholder="optional"
+                />
+              </label>
+              <label className="sm:col-span-2">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">default</span>
+                <input
+                  type="number"
+                  step="any"
+                  value={opt.defaultValue ?? ""}
+                  onChange={(e) =>
+                    setOpt(i, {
+                      defaultValue: e.target.value === "" ? undefined : Number(e.target.value),
+                    })
                   }
                   className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
                   placeholder="optional"

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { seedCategories } from "@/prisma/seed-data/categories";
 
 export type CalculatorCategory = {
   slug: string;
@@ -7,23 +8,7 @@ export type CalculatorCategory = {
 };
 
 /** Default categories used by `prisma/seed` upserts when the DB is empty or you re-seed. */
-export const defaultCategoriesSeed: CalculatorCategory[] = [
-  {
-    slug: "anthropometry",
-    name: "Anthropometry",
-    description: "Body measurements, composition, and energy requirement tools.",
-  },
-  {
-    slug: "fitness-hydration",
-    name: "Fitness & Hydration",
-    description: "Daily hydration and heart-rate zone planning calculators.",
-  },
-  {
-    slug: "clinical",
-    name: "Clinical",
-    description: "Common bedside and lab-derived medical calculation tools.",
-  },
-];
+export const defaultCategoriesSeed: CalculatorCategory[] = seedCategories;
 
 export async function getAllCategories(): Promise<CalculatorCategory[]> {
   const rows = await prisma.category.findMany({

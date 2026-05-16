@@ -1,11 +1,13 @@
 /** Row shape for calculator cards and listings */
 export type CalculatorListItem = {
+  id?: string;
   slug: string;
   category: string;
   name: string;
   formulaPlain: string;
   description: string;
   showOnHome: boolean;
+  isPublished?: boolean;
 };
 
 export type CalculatorOutputDef = {
@@ -40,6 +42,7 @@ export type PublicField = {
     add?: number;
     min?: number;
     max?: number;
+    defaultValue?: number;
   }> | null;
 };
 

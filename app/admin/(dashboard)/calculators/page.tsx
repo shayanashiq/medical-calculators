@@ -42,7 +42,7 @@ export default async function AdminCalculatorsPage({
     orderBy: { name: "asc" },
     skip,
     take: CALCULATORS_PAGE_SIZE,
-    select: { id: true, slug: true, name: true, category: true, updatedAt: true },
+    select: { id: true, slug: true, name: true, category: true, isPublished: true, updatedAt: true },
   });
 
   const from = total === 0 ? 0 : skip + 1;
@@ -88,6 +88,7 @@ export default async function AdminCalculatorsPage({
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Slug</th>
                 <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Updated</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -98,6 +99,17 @@ export default async function AdminCalculatorsPage({
                   <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{row.slug}</td>
                   <td className="px-4 py-3 text-slate-600">{row.category}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        row.isPublished
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {row.isPublished ? "Live" : "Testing"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-slate-500">{row.updatedAt.toISOString().slice(0, 10)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-3">

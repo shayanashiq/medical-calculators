@@ -39,6 +39,7 @@ export type IncomingField = {
     add?: number;
     min?: number;
     max?: number;
+    defaultValue?: number;
   }> | null;
   unitPresetId?: string | null;
 };
@@ -57,6 +58,7 @@ export type IncomingCalculatorBody = {
   contentHtml?: string | null;
   limitationsDetailed?: string | null;
   showOnHome: boolean;
+  isPublished: boolean;
   outputs: IncomingOutput[];
   fields: IncomingField[];
   validationExpr?: string | null;
@@ -311,6 +313,8 @@ export function validateIncomingCalculator(
         const add = typeof u.add === "number" && Number.isFinite(u.add) ? u.add : undefined;
         const min = typeof u.min === "number" && Number.isFinite(u.min) ? u.min : undefined;
         const max = typeof u.max === "number" && Number.isFinite(u.max) ? u.max : undefined;
+        const defaultValue =
+          typeof u.defaultValue === "number" && Number.isFinite(u.defaultValue) ? u.defaultValue : undefined;
         if (!uKey || !uLabel || !Number.isFinite(mul)) {
           return { ok: false, error: `Each unit option for “${label}” needs key, label, and numeric mul.` };
         }
@@ -321,7 +325,7 @@ export function validateIncomingCalculator(
           return { ok: false, error: `Duplicate unit option key “${uKey}” for “${label}”.` };
         }
         seenUnitKeys.add(uKey);
-        unitOptions.push({ key: uKey, label: uLabel, suffix, mul, add, min, max });
+        unitOptions.push({ key: uKey, label: uLabel, suffix, mul, add, min, max, defaultValue });
       }
       // Allow a single unit option (no conversion / switching).
       if (unitOptions.length < 1) {
@@ -356,6 +360,7 @@ export function validateIncomingCalculator(
   }
 
   const showOnHome = b.showOnHome === true;
+  const isPublished = b.isPublished === true;
 
   const data: IncomingCalculatorBody = {
     slug,
@@ -366,6 +371,7 @@ export function validateIncomingCalculator(
     seo,
     contentHtml,
     showOnHome,
+    isPublished,
     outputs,
     fields,
     validationExpr,

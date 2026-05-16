@@ -11,12 +11,18 @@ import {
 import { prisma } from "@/lib/prisma";
 
 const listSelect = {
+  id: true,
   slug: true,
   category: true,
   name: true,
   formulaPlain: true,
   description: true,
   showOnHome: true,
+  isPublished: true,
+} as const;
+
+const publicCalculatorWhere = {
+  isPublished: true,
 } as const;
 
 export type PaginatedCalculators = {
@@ -29,6 +35,7 @@ export type PaginatedCalculators = {
 
 export async function listCalculators(): Promise<CalculatorListItem[]> {
   return prisma.calculator.findMany({
+    where: publicCalculatorWhere,
     select: listSelect,
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
@@ -36,12 +43,12 @@ export async function listCalculators(): Promise<CalculatorListItem[]> {
 
 /** For SEO copy and metadata (cheap count). */
 export async function getCalculatorCount(): Promise<number> {
-  return prisma.calculator.count();
+  return prisma.calculator.count({ where: publicCalculatorWhere });
 }
 
 export async function listShowOnHomeCalculators(): Promise<CalculatorListItem[]> {
   return prisma.calculator.findMany({
-    where: { showOnHome: true },
+    where: { ...publicCalculatorWhere, showOnHome: true },
     select: listSelect,
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
@@ -50,9 +57,10 @@ export async function listShowOnHomeCalculators(): Promise<CalculatorListItem[]>
 function calculatorsSearchWhere(searchRaw: string | undefined) {
   const q = searchRaw?.trim();
   if (!q) {
-    return {};
+    return publicCalculatorWhere;
   }
   return {
+    ...publicCalculatorWhere,
     OR: [
       { name: { contains: q, mode: "insensitive" as const } },
       { description: { contains: q, mode: "insensitive" as const } },
@@ -108,8 +116,8 @@ export async function listCalculatorsPaginated(
 }
 
 export async function getCalculatorBySlug(slug: string): Promise<PublicCalculator | null> {
-  const row = await prisma.calculator.findUnique({
-    where: { slug },
+  const row = await prisma.calculator.findFirst({
+    where: { slug, isPublished: true },
     include: {
       fields: {
         orderBy: { sortOrder: "asc" },
@@ -160,7 +168,7 @@ export async function getCalculatorBySlug(slug: string): Promise<PublicCalculato
 
 export async function getCalculatorsByCategory(category: string): Promise<CalculatorListItem[]> {
   return prisma.calculator.findMany({
-    where: { category },
+    where: { ...publicCalculatorWhere, category },
     select: listSelect,
     orderBy: { name: "asc" },
   });
@@ -174,6 +182,7 @@ export async function getRelatedCalculatorsByCategory(
   const safeLimit = Math.max(1, Math.min(12, Math.floor(limit)));
   return prisma.calculator.findMany({
     where: {
+      ...publicCalculatorWhere,
       category,
       slug: { not: currentSlug },
     },
@@ -192,13 +201,14 @@ export async function getCalculatorsByCategoryPaginated(
   const q = search?.trim();
   const where = q
     ? {
+        ...publicCalculatorWhere,
         category,
         OR: [
           { name: { contains: q, mode: "insensitive" as const } },
           { description: { contains: q, mode: "insensitive" as const } },
         ],
       }
-    : { category };
+    : { ...publicCalculatorWhere, category };
   const total = await prisma.calculator.count({ where });
   const totalPages = computeTotalPages(total, pageSize);
   const safePage = Math.min(page, totalPages);

@@ -72,7 +72,7 @@ export function HomeCategorySpotlight({ categories, calculators }: Props) {
     "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-900 sm:h-11 sm:w-11 sm:text-xl";
 
   return (
-    <section className="relative pt-12 pb-14 sm:pt-16 sm:pb-16">
+    <section className="relative border-t border-slate-200/80 bg-white/60 pt-12 pb-14 backdrop-blur-sm sm:pt-16 sm:pb-16">
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
         <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Browse by category

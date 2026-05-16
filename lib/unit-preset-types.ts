@@ -7,6 +7,7 @@ export type UnitPresetOption = {
   add?: number;
   min?: number;
   max?: number;
+  defaultValue?: number;
 };
 
 export type UnitPresetListItem = {

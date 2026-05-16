@@ -25,6 +25,7 @@ function staticPublicEntries(now: Date): MetadataRoute.Sitemap {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [calculators, categories] = await Promise.all([
     prisma.calculator.findMany({
+      where: { isPublished: true },
       select: { slug: true, updatedAt: true },
       orderBy: { name: "asc" },
     }),

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { updateCategoryAction } from "@/app/actions/admin-actions";
 
 type Props = {
   categoryId: string;
@@ -30,18 +31,13 @@ export function EditCategoryForm({
     e.preventDefault();
     setError(null);
     setSaving(true);
-    const res = await fetch(`/api/admin/categories/${categoryId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        description: description.trim(),
-        sortOrder: sortOrder.trim() === "" ? 0 : Number(sortOrder),
-      }),
+    const data = await updateCategoryAction(categoryId, {
+      name: name.trim(),
+      description: description.trim(),
+      sortOrder: sortOrder.trim() === "" ? 0 : Number(sortOrder),
     });
-    const data = (await res.json()) as { error?: string };
     setSaving(false);
-    if (!res.ok) {
+    if (!data.ok) {
       setError(data.error ?? "Save failed.");
       return;
     }

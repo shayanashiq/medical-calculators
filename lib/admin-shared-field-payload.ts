@@ -98,6 +98,8 @@ export function validateIncomingSharedField(
       const add = typeof u.add === "number" && Number.isFinite(u.add) ? u.add : undefined;
       const uMin = typeof u.min === "number" && Number.isFinite(u.min) ? u.min : undefined;
       const uMax = typeof u.max === "number" && Number.isFinite(u.max) ? u.max : undefined;
+      const uDefaultValue =
+        typeof u.defaultValue === "number" && Number.isFinite(u.defaultValue) ? u.defaultValue : undefined;
       if (!unitKey || !unitLabel || !Number.isFinite(mul)) {
         return { ok: false, error: "Each unit option needs key, label, and numeric mul." };
       }
@@ -108,7 +110,16 @@ export function validateIncomingSharedField(
         return { ok: false, error: `Duplicate unit option key “${unitKey}”.` };
       }
       seen.add(unitKey);
-      parsed.push({ key: unitKey, label: unitLabel, suffix, mul, add, min: uMin, max: uMax });
+      parsed.push({
+        key: unitKey,
+        label: unitLabel,
+        suffix,
+        mul,
+        add,
+        min: uMin,
+        max: uMax,
+        defaultValue: uDefaultValue,
+      });
     }
     if (parsed.length >= 2) {
       unitOptions = parsed;

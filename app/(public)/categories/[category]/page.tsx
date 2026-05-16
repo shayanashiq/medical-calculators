@@ -73,7 +73,7 @@ export default async function CategoryPage({
   const searchTrimmed = searchQuery?.trim() ?? "";
 
   const [categoryCalculatorCount, { items, total, page, pageSize, totalPages }] = await Promise.all([
-    prisma.calculator.count({ where: { category: category.slug } }),
+    prisma.calculator.count({ where: { category: category.slug, isPublished: true } }),
     getCalculatorsByCategoryPaginated(category.slug, pageParam, searchTrimmed || undefined),
   ]);
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;

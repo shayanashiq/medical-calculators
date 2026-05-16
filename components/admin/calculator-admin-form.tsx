@@ -4,6 +4,7 @@ import type { FieldType } from "@prisma/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { saveCalculatorAction } from "@/app/actions/admin-actions";
 import type { IncomingField, IncomingOutput } from "@/lib/admin-calculator-payload";
 import {
   buildContentHtmlFromBlocks,
@@ -24,6 +25,7 @@ type AdminRow = {
   category: string;
   contentHtml: string | null;
   showOnHome: boolean;
+  isPublished?: boolean;
   outputs: unknown;
   validationExpr: string | null;
   validationMessage: string | null;
@@ -99,6 +101,7 @@ function mapRowToForm(row: AdminRow) {
     category: row.category,
     contentHtml: row.contentHtml ?? "",
     showOnHome: row.showOnHome ?? false,
+    isPublished: row.isPublished ?? false,
     outputs: row.outputs as IncomingOutput[],
     validationExpr: row.validationExpr,
     validationMessage: row.validationMessage,
@@ -122,6 +125,7 @@ function mapRowToForm(row: AdminRow) {
           add?: number;
           min?: number;
           max?: number;
+          defaultValue?: number;
         }[] | null) ?? null,
       unitPresetId: f.unitPresetId ?? null,
     })),
@@ -139,6 +143,7 @@ const defaultFormWithoutCategory = {
   validationExpr: null as string | null,
   validationMessage: null as string | null,
   showOnHome: false,
+  isPublished: false,
 };
 
 function defaultFormForCategories(categoryList: CalculatorCategory[]) {
@@ -351,6 +356,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       add?: number;
       min?: number;
       max?: number;
+      defaultValue?: number;
     },
   ) => {
     setForm((f) => {
@@ -389,6 +395,7 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       category: form.category,
       contentHtml: form.contentHtml.trim() || null,
       showOnHome: form.showOnHome,
+      isPublished: form.isPublished,
       outputs: form.outputs.map((o) => ({
         label: o.label.trim(),
         unit: o.unit.trim(),
@@ -413,18 +420,10 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
       validationExpr: form.validationExpr?.trim() || null,
       validationMessage: form.validationMessage?.trim() || null,
     };
-
-    const url = mode === "create" ? "/api/admin/calculators" : `/api/admin/calculators/${calculatorId}`;
-    const method = mode === "create" ? "POST" : "PUT";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json()) as { error?: string };
+    const result = await saveCalculatorAction(payload, mode === "edit" ? calculatorId : undefined);
     setSaving(false);
-    if (!res.ok) {
-      setError(data.error ?? "Save failed.");
+    if (!result.ok) {
+      setError(result.error ?? "Save failed.");
       return;
     }
     router.push("/admin/calculators");
@@ -506,6 +505,21 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
             <span className="block text-sm font-semibold text-slate-800">Show on home page</span>
             <span className="block text-xs text-slate-500">
               Appears in the public home &ldquo;Featured calculators&rdquo; section.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={form.isPublished}
+            onChange={(e) => setForm((f) => ({ ...f, isPublished: e.target.checked }))}
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-slate-800">Published / live</span>
+            <span className="block text-xs text-slate-500">
+              Keep this off while testing. Only published calculators appear on the public site and in public totals.
             </span>
           </span>
         </label>
@@ -856,6 +870,21 @@ export function CalculatorAdminForm({ mode, calculatorId, initialRow, categoryLi
                                 onChange={(e) =>
                                   setUnitOption(i, unitIdx, {
                                     max: e.target.value === "" ? undefined : Number(e.target.value),
+                                  })
+                                }
+                                className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                placeholder="optional"
+                              />
+                            </label>
+                            <label className="sm:col-span-2">
+                              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">default</span>
+                              <input
+                                type="number"
+                                step="any"
+                                value={opt.defaultValue ?? ""}
+                                onChange={(e) =>
+                                  setUnitOption(i, unitIdx, {
+                                    defaultValue: e.target.value === "" ? undefined : Number(e.target.value),
                                   })
                                 }
                                 className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"

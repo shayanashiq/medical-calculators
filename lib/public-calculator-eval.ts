@@ -1,5 +1,6 @@
 import type { CalculatorOutputDef, PublicCalculator } from "@/lib/calculator-types";
 import { evaluateExpression } from "@/lib/calculator-eval";
+import { resolveUnitDisplayDefault, toBaseUnitValue } from "@/lib/unit-option-utils";
 
 export type CalculatorResultRow = {
   label: string;
@@ -13,7 +14,15 @@ export function defaultValuesFromFields(
 ): Record<string, number> {
   const values: Record<string, number> = {};
   for (const f of fields) {
-    values[f.key] = f.defaultValue;
+    const firstUnit =
+      f.fieldType === "NUMBER" && Array.isArray(f.unitOptions) && f.unitOptions.length > 0
+        ? f.unitOptions[0]
+        : undefined;
+    if (firstUnit) {
+      values[f.key] = toBaseUnitValue(resolveUnitDisplayDefault(f.defaultValue, firstUnit), firstUnit);
+    } else {
+      values[f.key] = f.defaultValue;
+    }
   }
   return values;
 }

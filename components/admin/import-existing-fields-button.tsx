@@ -2,12 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-type ImportResult = {
-  scanned: number;
-  created: number;
-  linked: number;
-};
+import { importExistingFieldsAction } from "@/app/actions/admin-actions";
 
 export function ImportExistingFieldsButton() {
   const router = useRouter();
@@ -18,14 +13,13 @@ export function ImportExistingFieldsButton() {
       return;
     }
     setBusy(true);
-    const res = await fetch("/api/admin/shared-fields/import-existing", { method: "POST" });
-    const data = (await res.json()) as ImportResult & { error?: string };
+    const data = await importExistingFieldsAction();
     setBusy(false);
-    if (!res.ok) {
+    if (!data.ok) {
       window.alert(data.error ?? "Import failed.");
       return;
     }
-    window.alert(`Imported: created ${data.created}, linked ${data.linked}, scanned ${data.scanned}.`);
+    window.alert(`Imported: created ${data.data.created}, linked ${data.data.linked}, scanned ${data.data.scanned}.`);
     router.refresh();
   }
 

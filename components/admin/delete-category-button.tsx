@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { deleteCategoryAction } from "@/app/actions/admin-actions";
 
 export function DeleteCategoryButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -12,11 +13,10 @@ export function DeleteCategoryButton({ id, name }: { id: string; name: string })
       return;
     }
     setBusy(true);
-    const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+    const res = await deleteCategoryAction(id);
     setBusy(false);
     if (!res.ok) {
-      const data = (await res.json()) as { error?: string };
-      window.alert(data.error ?? "Delete failed.");
+      window.alert(res.error ?? "Delete failed.");
       return;
     }
     router.refresh();

@@ -17,7 +17,7 @@ export function BrowseCategoryCard({
   const count = catCalcs.length;
 
   return (
-    <div className="card-elevated relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1">
+    <div className="card-elevated relative flex flex-col overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-teal-200/80 hover:shadow-md">
       <div
         className="pointer-events-none absolute right-0 top-0 h-28 w-28 opacity-30"
         style={{ background: visual.bg, borderRadius: "0 1.5rem 0 80%" }}

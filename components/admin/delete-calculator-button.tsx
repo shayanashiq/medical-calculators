@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { deleteCalculatorAction } from "@/app/actions/admin-actions";
 
 export function DeleteCalculatorButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
@@ -12,10 +13,10 @@ export function DeleteCalculatorButton({ id, name }: { id: string; name: string 
       return;
     }
     setBusy(true);
-    const res = await fetch(`/api/admin/calculators/${id}`, { method: "DELETE" });
+    const res = await deleteCalculatorAction(id);
     setBusy(false);
     if (!res.ok) {
-      alert("Could not delete.");
+      alert(res.error ?? "Could not delete.");
       return;
     }
     router.refresh();

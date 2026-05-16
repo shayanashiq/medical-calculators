@@ -21,7 +21,9 @@ export function parseUnitPresetOptionsFromJson(raw: unknown): UnitPresetOption[]
     const add = typeof u.add === "number" && Number.isFinite(u.add) ? u.add : undefined;
     const min = typeof u.min === "number" && Number.isFinite(u.min) ? u.min : undefined;
     const max = typeof u.max === "number" && Number.isFinite(u.max) ? u.max : undefined;
-    out.push({ key, label, suffix, mul, add, min, max });
+    const defaultValue =
+      typeof u.defaultValue === "number" && Number.isFinite(u.defaultValue) ? u.defaultValue : undefined;
+    out.push({ key, label, suffix, mul, add, min, max, defaultValue });
   }
   return out;
 }

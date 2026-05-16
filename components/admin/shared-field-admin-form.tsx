@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  createSharedFieldAction,
+  updateSharedFieldAction,
+} from "@/app/actions/admin-actions";
 import type { SharedFieldListItem } from "@/lib/shared-field-types";
 import type { UnitPresetListItem } from "@/lib/unit-preset-types";
 import type { UnitPresetOption } from "@/lib/unit-preset-types";
@@ -88,15 +92,12 @@ export function SharedFieldAdminForm({ mode, fieldId, unitPresets, initial }: Pr
       unitPresetId: form.fieldType === "NUMBER" ? form.unitPresetId : null,
       description: form.description.trim() || null,
     };
-    const url = mode === "create" ? "/api/admin/shared-fields" : `/api/admin/shared-fields/${fieldId}`;
-    const res = await fetch(url, {
-      method: mode === "create" ? "POST" : "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json()) as { error?: string };
+    const data =
+      mode === "create"
+        ? await createSharedFieldAction(payload)
+        : await updateSharedFieldAction(fieldId ?? "", payload);
     setSaving(false);
-    if (!res.ok) {
+    if (!data.ok) {
       setError(data.error ?? "Save failed.");
       return;
     }
@@ -338,6 +339,32 @@ export function SharedFieldAdminForm({ mode, fieldId, unitPresets, initial }: Pr
                               unitOptions: (f.unitOptions ?? []).map((u, i) =>
                                 i === unitIdx
                                   ? { ...u, max: e.target.value === "" ? undefined : Number(e.target.value) }
+                                  : u,
+                              ),
+                            }))
+                          }
+                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                          placeholder="optional"
+                        />
+                      </label>
+                      <label className="sm:col-span-2">
+                        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          default
+                        </span>
+                        <input
+                          type="number"
+                          step="any"
+                          value={opt.defaultValue ?? ""}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              unitOptions: (f.unitOptions ?? []).map((u, i) =>
+                                i === unitIdx
+                                  ? {
+                                      ...u,
+                                      defaultValue:
+                                        e.target.value === "" ? undefined : Number(e.target.value),
+                                    }
                                   : u,
                               ),
                             }))

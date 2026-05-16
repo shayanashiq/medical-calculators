@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { browseCalculatorsAction } from "@/app/actions/public-actions";
 import { CalculatorTileCard } from "@/components/cards/calculator-tile-card";
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 import type { CalculatorListItem } from "@/lib/calculator-types";
@@ -32,17 +32,17 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
     const id = ++requestId.current;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ skip: "0", take: String(PAGE_SIZE) });
-      if (search) {
-        params.set("q", search);
-      }
-      const res = await fetch(`/api/calculators?${params.toString()}`);
-      const data = (await res.json()) as { items?: CalculatorListItem[]; total?: number };
+      const data = await browseCalculatorsAction({ skip: 0, take: PAGE_SIZE, q: search || undefined });
       if (id !== requestId.current) {
         return;
       }
-      setItems(data.items ?? []);
-      setTotal(typeof data.total === "number" ? data.total : 0);
+      if (!data.ok) {
+        setItems([]);
+        setTotal(0);
+        return;
+      }
+      setItems(data.items);
+      setTotal(data.total);
     } finally {
       if (id === requestId.current) {
         setLoading(false);
@@ -76,20 +76,17 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
     }
     setLoadingMore(true);
     try {
-      const params = new URLSearchParams({
-        skip: String(items.length),
-        take: String(PAGE_SIZE),
+      const data = await browseCalculatorsAction({
+        skip: items.length,
+        take: PAGE_SIZE,
+        q: debouncedQ || undefined,
       });
-      if (debouncedQ) {
-        params.set("q", debouncedQ);
+      if (!data.ok) {
+        return;
       }
-      const res = await fetch(`/api/calculators?${params.toString()}`);
-      const data = (await res.json()) as { items?: CalculatorListItem[]; total?: number };
-      const next = data.items ?? [];
+      const next = data.items;
       setItems((prev) => [...prev, ...next]);
-      if (typeof data.total === "number") {
-        setTotal(data.total);
-      }
+      setTotal(data.total);
     } finally {
       setLoadingMore(false);
     }
@@ -140,7 +137,7 @@ export function CalculatorsBrowseClient({ initialItems, initialTotal, initialSea
       ) : null}
 
       <section className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {items.map((item, idx) => (
+        {items.map((item) => (
           <CalculatorTileCard
             key={item.slug}
             calculator={item}

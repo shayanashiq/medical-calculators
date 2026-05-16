@@ -57,13 +57,13 @@ export default async function CalculatorsIndexPage({
   const { items, total } = await browseCalculatorsChunk(0, Number.MAX_SAFE_INTEGER, q);
 
   return (
-    <main className="mx-auto w-full max-w-7xl bg-white px-4 py-6 sm:px-6 lg:px-8">
-      <section className="mb-6 max-w-3xl">
-        {/* <p className="text-sm leading-7 text-slate-600">
-          Browse our collection of free online medical calculators and health assessment tools. Each clinical
-          calculator includes clear inputs, instant results, and supporting guidance to help you understand the
-          calculation.
-        </p> */}
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <section className="mb-8 overflow-hidden rounded-3xl border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-cyan-50 px-6 py-8 shadow-sm sm:px-10">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">All medical calculators</h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
+          Search {total} free clinical and wellness tools with instant, private results. Each calculator includes
+          plain-language guidance, formulas, and limitations for informed use.
+        </p>
       </section>
       <CalculatorsBrowseClient initialItems={items} initialTotal={total} initialSearch={qRaw} />
     </main>

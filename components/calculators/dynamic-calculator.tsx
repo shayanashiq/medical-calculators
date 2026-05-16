@@ -2,26 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { calculateCalculatorAction } from "@/app/actions/public-actions";
 import type { PublicCalculator } from "@/lib/calculator-types";
 import { NumberInput, ResultBox, SelectInput, UnitToggleGroup } from "@/components/calculators/form-controls";
 import { SiteSearchBar } from "@/components/ui/site-search-bar";
 import { RangedValueIndicator } from "@/components/calculators/ranged-value-indicator";
 import type { CalculatorResultRow } from "@/lib/public-calculator-eval";
 import { evaluatePublicOutputs } from "@/lib/public-calculator-eval";
+import {
+  fromBaseUnitValue,
+  resolveUnitDisplayDefault,
+  resolveUnitDisplayMax,
+  resolveUnitDisplayMin,
+  toBaseUnitValue,
+} from "@/lib/unit-option-utils";
 
 type Props = { calculator: PublicCalculator; initialResults?: CalculatorResultRow[] };
 
 type UnitOption = NonNullable<NonNullable<PublicCalculator["fields"][number]["unitOptions"]>[number]>;
-
-function toBase(x: number, opt: UnitOption): number {
-  const add = typeof opt.add === "number" ? opt.add : 0;
-  return (x + add) * opt.mul;
-}
-
-function fromBase(base: number, opt: UnitOption): number {
-  const add = typeof opt.add === "number" ? opt.add : 0;
-  return base / opt.mul - add;
-}
 
 function withDynamicUnitLabel(label: string, unitText?: string) {
   const cleaned = label.replace(/\s*\([^)]*\)\s*$/, "").trim();
@@ -49,15 +47,55 @@ function numberFieldsWithinLimits(calc: PublicCalculator, vals: Record<string, n
   return true;
 }
 
+function firstUnitOptionForField(field: PublicCalculator["fields"][number]) {
+  return field.fieldType === "NUMBER" ? ((field.unitOptions?.[0] as UnitOption | undefined) ?? undefined) : undefined;
+}
+
+function defaultBaseValueForField(
+  field: PublicCalculator["fields"][number],
+  selectedOption?: UnitOption,
+): number {
+  if (field.fieldType !== "NUMBER") {
+    return field.defaultValue;
+  }
+  const option = selectedOption ?? firstUnitOptionForField(field);
+  const displayDefault = resolveUnitDisplayDefault(field.defaultValue, option);
+  return option ? toBaseUnitValue(displayDefault, option) : field.defaultValue;
+}
+
+function buildDefaultValues(
+  fields: PublicCalculator["fields"],
+  unitChoice: Record<string, string>,
+): Record<string, number> {
+  const values: Record<string, number> = {};
+  for (const field of fields) {
+    if (field.fieldType !== "NUMBER") {
+      values[field.key] = field.defaultValue;
+      continue;
+    }
+    const options = (field.unitOptions ?? []) as UnitOption[];
+    const chosen = options.find((option) => option.key === unitChoice[field.key]) ?? options[0];
+    values[field.key] = defaultBaseValueForField(field, chosen);
+  }
+  return values;
+}
+
 export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
   const router = useRouter();
-  const initial = useMemo(() => {
-    const v: Record<string, number> = {};
-    for (const f of calculator.fields) {
-      v[f.key] = f.defaultValue;
+  const initialUnitChoice = useMemo(() => {
+    const next: Record<string, string> = {};
+    for (const field of calculator.fields) {
+      const first = firstUnitOptionForField(field);
+      if (first) {
+        next[field.key] = first.key;
+      }
     }
-    return v;
-  }, [calculator.fields]);
+    return next;
+  }, [calculator]);
+  const initial = useMemo(
+    () => buildDefaultValues(calculator.fields, initialUnitChoice),
+    [calculator.fields, initialUnitChoice],
+  );
 
   const [values, setValues] = useState<Record<string, number>>(initial);
   const [results, setResults] = useState<CalculatorResultRow[] | null>(
@@ -65,6 +103,7 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [unitChoice, setUnitChoice] = useState<Record<string, string>>(initialUnitChoice);
 
   const run = useCallback(
     async (next: Record<string, number>) => {
@@ -77,21 +116,8 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
           return;
         }
 
-        const res = await fetch(`/api/calculators/${calculator.slug}/calculate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ values: next }),
-        });
-        const data = (await res.json()) as {
-          results?: {
-            label: string;
-            unit: string;
-            value: number;
-            variant?: "good" | "warning" | "severe" | "neutral";
-          }[];
-          error?: string;
-        };
-        if (!res.ok) {
+        const data = await calculateCalculatorAction(calculator.slug, next);
+        if (!data.ok) {
           setError(data.error ?? "Could not calculate.");
           return;
         }
@@ -130,8 +156,6 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
     return m;
   }, [calculator.fields]);
 
-  const [unitChoice, setUnitChoice] = useState<Record<string, string>>({});
-
   useEffect(() => {
     setUnitChoice((prev) => {
       const next = { ...prev };
@@ -158,10 +182,11 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
   };
 
   const onResetClick = () => {
-    setValues(initial);
+    const nextValues = buildDefaultValues(calculator.fields, unitChoice);
+    setValues(nextValues);
     setError(null);
     setPending(false);
-    setResults(initialResults.length > 0 ? initialResults : null);
+    setResults(evaluatePublicOutputs(calculator.outputs, nextValues));
   };
 
   const rangedResults = useMemo(
@@ -175,7 +200,7 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
       m.set(o.label, o);
     }
     return m;
-  }, [calculator.outputs]);
+  }, [calculator]);
 
   const shouldShowIndicatorOnly = rangedResults.length > 0;
 
@@ -222,14 +247,14 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
                     const base = values[f.key] ?? f.defaultValue;
                     const baseMin = f.min ?? 0;
                     const baseMax = f.max ?? 1e9;
-                    const displayMin =
-                      typeof chosen?.min === "number" ? chosen.min : chosen ? fromBase(baseMin, chosen) : baseMin;
-                    const displayMax =
-                      typeof chosen?.max === "number" ? chosen.max : chosen ? fromBase(baseMax, chosen) : baseMax;
+                    const displayMin = resolveUnitDisplayMin(baseMin, chosen) ?? baseMin;
+                    const displayMax = resolveUnitDisplayMax(baseMax, chosen) ?? baseMax;
                     const safeMin = Math.min(displayMin, displayMax);
                     const safeMax = Math.max(displayMin, displayMax);
                     const displayVal =
-                      chosen && Number.isFinite(base) ? Math.round(fromBase(base, chosen) * 1000) / 1000 : base;
+                      chosen && Number.isFinite(base)
+                        ? Math.round(fromBaseUnitValue(base, chosen) * 1000) / 1000
+                        : base;
                     const suffix = chosen?.suffix;
                     const dynamicLabel = withDynamicUnitLabel(f.label, chosen?.suffix ?? chosen?.label);
                     return (
@@ -240,7 +265,17 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
                             <UnitToggleGroup
                               options={opts.map((o) => ({ key: o.key, label: o.label }))}
                               value={unitChoice[f.key] ?? opts[0]!.key}
-                              onChange={(k) => setUnitChoice((p) => ({ ...p, [f.key]: k }))}
+                              onChange={(k) => {
+                                const nextUnit = opts.find((option) => option.key === k);
+                                if (!nextUnit) {
+                                  return;
+                                }
+                                setUnitChoice((prev) => ({ ...prev, [f.key]: k }));
+                                setValues((prev) => ({
+                                  ...prev,
+                                  [f.key]: defaultBaseValueForField(f, nextUnit),
+                                }));
+                              }}
                               ariaLabel={`${f.label} units`}
                             />
                           ) : undefined
@@ -252,7 +287,7 @@ export function DynamicCalculator({ calculator, initialResults = [] }: Props) {
                         suffix={suffix}
                         onChange={(n) => {
                           if (chosen) {
-                            setNumber(f.key, toBase(n, chosen));
+                            setNumber(f.key, toBaseUnitValue(n, chosen));
                           } else {
                             setNumber(f.key, n);
                           }

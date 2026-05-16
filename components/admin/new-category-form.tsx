@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createCategoryAction } from "@/app/actions/admin-actions";
 
 export function NewCategoryForm() {
   const router = useRouter();
@@ -16,19 +17,14 @@ export function NewCategoryForm() {
     e.preventDefault();
     setError(null);
     setSaving(true);
-    const res = await fetch("/api/admin/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        slug: slug.trim(),
-        name: name.trim(),
-        description: description.trim(),
-        sortOrder: sortOrder.trim() === "" ? 0 : Number(sortOrder),
-      }),
+    const data = await createCategoryAction({
+      slug: slug.trim(),
+      name: name.trim(),
+      description: description.trim(),
+      sortOrder: sortOrder.trim() === "" ? 0 : Number(sortOrder),
     });
-    const data = (await res.json()) as { error?: string };
     setSaving(false);
-    if (!res.ok) {
+    if (!data.ok) {
       setError(data.error ?? "Save failed.");
       return;
     }

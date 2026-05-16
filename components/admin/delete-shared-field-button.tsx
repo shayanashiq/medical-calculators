@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { deleteSharedFieldAction } from "@/app/actions/admin-actions";
 
 export function DeleteSharedFieldButton({ id, label }: { id: string; label: string }) {
   const router = useRouter();
@@ -12,10 +13,10 @@ export function DeleteSharedFieldButton({ id, label }: { id: string; label: stri
       return;
     }
     setBusy(true);
-    const res = await fetch(`/api/admin/shared-fields/${id}`, { method: "DELETE" });
+    const res = await deleteSharedFieldAction(id);
     setBusy(false);
     if (!res.ok) {
-      window.alert("Could not delete shared field.");
+      window.alert(res.error ?? "Could not delete shared field.");
       return;
     }
     router.refresh();

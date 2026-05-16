@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { saveCalculatorSeoAction } from "@/app/actions/admin-actions";
 import { KeywordChipsInput } from "@/components/admin/keyword-chips-input";
 
 type Row = {
@@ -78,7 +79,7 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
     setContentExpansion(initialSeo.contentExpansion);
     setError(null);
     setSavedAt(null);
-  }, [selectedId]);
+  }, [initialSeo]);
 
   async function save() {
     if (!selected) return;
@@ -87,13 +88,8 @@ export function SeoKeywordsAdmin({ calculators }: { calculators: Row[] }) {
     setSavedAt(null);
     try {
       const seo = { specific, problems, promos, longTail, contentExpansion };
-      const res = await fetch(`/api/admin/calculators/${selected.id}/seo`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seo }),
-      });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
+      const data = await saveCalculatorSeoAction(selected.id, { seo });
+      if (!data.ok) {
         setError(data.error ?? "Save failed.");
         return;
       }
