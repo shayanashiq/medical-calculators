@@ -13,6 +13,7 @@ import { mergeArticleHtmlWithDetailedLimitations } from "@/lib/calculator-conten
 import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
+import { AdBanner } from "@/components/ads/ad-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -164,6 +165,8 @@ export default async function CalculatorPage({
         </Link>
       </div>
 
+      <AdBanner />
+
       <header className="mb-6 flex flex-col gap-3 sm:mb-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -184,11 +187,16 @@ export default async function CalculatorPage({
         <DynamicCalculator calculator={calculator} initialResults={initialResults} />
       </section>
 
+      <AdBanner />
+
       {articleHtml?.trim() ? (
         <section className="calc-html calc-html--article">
+          <AdBanner />
           <div dangerouslySetInnerHTML={{ __html: articleHtml }} />
         </section>
       ) : null}
+
+      <AdBanner />
 
       {relatedCalculators.length > 0 ? (
         <section className="mt-8 md:mt-12 rounded-2xl border border-teal-100 bg-gradient-to-r from-emerald-50/70 via-cyan-50/60 to-blue-50/70 p-4 sm:p-5">
