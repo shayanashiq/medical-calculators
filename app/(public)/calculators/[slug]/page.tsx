@@ -13,7 +13,7 @@ import { mergeArticleHtmlWithDetailedLimitations } from "@/lib/calculator-conten
 import { defaultValuesFromFields, evaluatePublicOutputs } from "@/lib/public-calculator-eval";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { SITE_BRAND, SITE_DOMAIN } from "@/lib/site-brand";
-import { AdBanner } from "@/components/ads/ad-banner";
+import { AdBanner, NativeBanner } from "@/components/ads/ad-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -187,7 +187,7 @@ export default async function CalculatorPage({
         <DynamicCalculator calculator={calculator} initialResults={initialResults} />
       </section>
 
-      <AdBanner />
+      <NativeBanner />
 
       {articleHtml?.trim() ? (
         <section className="calc-html calc-html--article">

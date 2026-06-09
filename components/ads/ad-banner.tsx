@@ -19,3 +19,20 @@ export function AdBanner() {
 
   return <div ref={containerRef} className="my-4 flex justify-center overflow-hidden" />;
 }
+
+export function NativeBanner() {
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.dataset.cfasync = "false";
+    script.src = "https://pl29693191.effectivecpmnetwork.com/dc399b9fa04623eab26698387d464b8f/invoke.js";
+    document.getElementById("container-dc399b9fa04623eab26698387d464b8f")?.after(script);
+  }, []);
+
+  return <div id="container-dc399b9fa04623eab26698387d464b8f" className="my-4" />;
+}
